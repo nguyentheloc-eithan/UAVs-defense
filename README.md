@@ -1,551 +1,668 @@
 # UAVs Defense
 
-## Advanced Multi-Modal UAV Detection, Identification & Tracking Platform
+## Advanced AI-Based UAV Detection, Localization & Tracking System
 
-> **UAVs Defense** is an advanced real-time UAV detection and tracking platform focused on the **detection, localization, identification, and continuous tracking of unmanned aerial vehicles (UAVs)**.
+> **UAVs Defense** is an AI-powered real-time UAV detection system developed to detect, identify, localize, and track unmanned aerial vehicles from sensor observations.
 >
-> The platform combines **AI-powered computer vision, radar observations, Radio-Frequency (RF) sensing, multi-sensor data fusion, and 3D geospatial visualization** to transform heterogeneous sensor observations into a unified and continuously updated representation of aerial targets.
+> The system focuses on combining **deep-learning-based computer vision, multi-object tracking, spatial localization, and multi-sensor observations** to build a reliable and continuously updated representation of UAV activity.
 >
-> Designed as a modular and extensible engineering platform, UAVs Defense separates **sensor acquisition, AI inference, observation processing, sensor fusion, target tracking, and visualization** into independent processing layers. This architecture enables new sensors, detection models, tracking algorithms, and data sources to be integrated without requiring fundamental changes to the overall system.
+> The primary detection pipeline is built around a **YOLO-family object detection model**, with model variants evaluated against the project dataset and target computing environment to determine the optimal balance between detection accuracy and real-time performance.
+>
+> The project is designed as an extensible research and engineering platform, allowing additional sensing technologies such as **radar and RF/SDR** to be incorporated into the detection and tracking pipeline.
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Project Objectives](#project-objectives)
-3. [System Architecture](#system-architecture)
-4. [UAV Detection Pipeline](#uav-detection-pipeline)
-5. [AI-Based UAV Detection](#ai-based-uav-detection)
-6. [Radar & RF Observation](#radar--rf-observation)
-7. [Multi-Sensor Data Fusion](#multi-sensor-data-fusion)
-8. [Multi-Object Tracking](#multi-object-tracking)
-9. [3D Geospatial Visualization](#3d-geospatial-visualization)
-10. [Technology Stack](#technology-stack)
-11. [Simulation & Testing](#simulation--testing)
-12. [Performance Evaluation](#performance-evaluation)
-13. [Development Roadmap](#development-roadmap)
+2. [Problem Statement](#problem-statement)
+3. [Project Objectives](#project-objectives)
+4. [System Architecture](#system-architecture)
+5. [UAV Detection Pipeline](#uav-detection-pipeline)
+6. [AI-Based UAV Detection](#ai-based-uav-detection)
+7. [Multi-Object Tracking](#multi-object-tracking)
+8. [UAV Localization](#uav-localization)
+9. [Multi-Sensor Integration](#multi-sensor-integration)
+10. [Dataset & Model Training](#dataset--model-training)
+11. [Performance Evaluation](#performance-evaluation)
+12. [Hardware & Software Requirements](#hardware--software-requirements)
+13. [Simulation & Testing](#simulation--testing)
+14. [Project Structure](#project-structure)
+15. [Development Roadmap](#development-roadmap)
+16. [Research Direction](#research-direction)
 
 ---
 
 # Overview
 
-The increasing availability of small Unmanned Aerial Vehicles has created new challenges for real-time aerial monitoring and situational awareness.
+The rapid growth of small Unmanned Aerial Vehicles (UAVs) has created increasingly demanding requirements for reliable aerial-object detection and tracking.
 
-Small UAVs can operate at different altitudes and distances, perform highly dynamic movements, become temporarily occluded, and appear under significantly different environmental conditions. Their visual, RF, and radar characteristics can also vary depending on the platform, payload, operating environment, and sensor configuration.
+Detecting small UAVs in real-world environments is challenging because their appearance can vary significantly depending on:
 
-A single sensing modality therefore cannot provide complete information in every scenario.
+* Distance from the sensor
+* Target size and orientation
+* Lighting conditions
+* Weather and atmospheric conditions
+* Background complexity
+* Occlusion
+* Motion blur
+* Camera characteristics
+* UAV platform and configuration
 
-**UAVs Defense addresses this challenge through a multi-modal detection architecture.**
+A conventional image-processing approach may struggle to maintain reliable detection across these conditions.
 
-Different sensing technologies contribute complementary information:
+**UAVs Defense approaches the problem using modern deep-learning-based computer vision combined with temporal tracking and spatial localization.**
 
-| Sensor             | Primary Information                                           |
-| ------------------ | ------------------------------------------------------------- |
-| **EO / IR Camera** | Visual detection and classification                           |
-| **Radar**          | Range, bearing, elevation, position and kinematic information |
-| **RF / SDR**       | Radio-frequency observations and signal characteristics       |
-| **Fusion Layer**   | Correlation and unified target representation                 |
-
-The platform combines these observations into a common processing pipeline:
+The core concept is:
 
 ```text
-                         UAVs Defense
-                              │
-                 ┌────────────┴────────────┐
-                 │                         │
-            EO / IR Camera            Radar / RF
-                 │                         │
-                 ▼                         ▼
-          AI-Based Detection        Sensor Observations
-                 │                         │
-                 └────────────┬────────────┘
-                              ▼
-                    Observation Processing
-                              │
-                              ▼
-                     Data Association
-                              │
-                              ▼
-                       Sensor Fusion
-                              │
-                              ▼
-                     Multi-Object Tracking
-                              │
-                              ▼
-                       Unified UAV Track
-                              │
-                              ▼
-                    2D / 3D Visualization
+                    UAV / Drone
+                         │
+                         ▼
+                  Camera / Sensor
+                         │
+                         ▼
+                Image Preprocessing
+                         │
+                         ▼
+              YOLO-Based Detection
+                         │
+                  ┌──────┴──────┐
+                  │             │
+             Bounding Box    Confidence
+                  │             │
+                  └──────┬──────┘
+                         ▼
+                Multi-Object Tracking
+                         │
+                         ▼
+                  UAV Localization
+                         │
+                         ▼
+                    Target State
+                         │
+                         ▼
+                  UAV Track Output
 ```
 
-The objective is not simply to detect an object in an individual sensor stream.
+The system transforms raw sensor data into structured information that can be analyzed, tracked, and visualized in real time.
 
-The system is designed to maintain a **consistent and continuously updated representation of aerial targets over time**, while preserving the origin and confidence of the underlying observations.
+---
+
+# Problem Statement
+
+Small UAV detection presents several computer-vision and tracking challenges.
+
+Unlike large aircraft, small UAVs may occupy only a small number of pixels when observed from long distances. Their appearance can also change substantially as the viewing angle changes.
+
+A robust detection system must therefore handle:
+
+### Small Objects
+
+Drones can occupy a very small region of an image, making feature extraction and classification difficult.
+
+### Dynamic Targets
+
+UAVs can change velocity, heading, altitude, and direction rapidly.
+
+### Complex Backgrounds
+
+Buildings, trees, birds, vehicles, cables, and other environmental elements can generate visually similar patterns.
+
+### Environmental Variation
+
+Lighting, haze, rain, shadows, low-light conditions, and image quality can significantly affect detection performance.
+
+### Continuous Tracking
+
+Detecting a UAV in one frame is insufficient for a real-time monitoring system. The system must maintain target identity across successive frames.
+
+Therefore, the project focuses on the complete perception pipeline:
+
+> **Detection → Identification → Tracking → Localization**
 
 ---
 
 # Project Objectives
 
-The primary objective of UAVs Defense is to build a reliable software platform for **real-time UAV perception and situational awareness**.
+The primary objectives of UAVs Defense are:
 
-The project focuses on:
+* Develop a real-time UAV detection system
+* Train and evaluate a deep-learning object detector
+* Detect multiple UAVs simultaneously
+* Estimate detection confidence and location within the image
+* Maintain persistent UAV identities across video frames
+* Estimate UAV spatial position where sufficient sensor information is available
+* Evaluate detection accuracy under different environmental conditions
+* Optimize inference performance for real-time operation
+* Establish an architecture suitable for future radar and RF/SDR integration
 
-* Real-time UAV detection from camera streams
-* AI-assisted UAV identification and classification
-* Multi-object detection and tracking
-* Radar observation integration
-* RF observation integration
-* Cross-sensor observation correlation
-* Target state estimation
-* Persistent track management
-* Real-time 2D and 3D visualization
-* Sensor and system monitoring
-* Simulation-driven development
-* Modular hardware and software integration
-
-The architecture is designed to support both **standalone computer-vision detection** and progressively more advanced multi-sensor configurations.
+The project emphasizes **measurable performance and reproducible experimentation** rather than relying solely on visual demonstrations.
 
 ---
 
 # System Architecture
 
-UAVs Defense is organized into independent processing layers.
+The system is organized into independent perception stages:
 
 ```text
 ┌───────────────────────────────────────────────────────────────┐
-│                       UAVs DEFENSE                            │
-│              UAV Detection & Tracking Platform               │
+│                       UAVs Defense                            │
+│             UAV Detection & Tracking Pipeline                │
 ├───────────────────────────────────────────────────────────────┤
 │                                                               │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    │
-│  │   EO / IR    │    │    Radar     │    │   RF / SDR   │    │
-│  │   Camera     │    │    Sensor    │    │    Sensor    │    │
-│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘    │
-│         │                   │                   │             │
-│         ▼                   ▼                   ▼             │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │                 Sensor Acquisition                      │ │
-│  └──────────────────────────┬──────────────────────────────┘ │
-│                             │                                 │
-│                             ▼                                 │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │             Detection & Observation Processing          │ │
-│  └──────────────────────────┬──────────────────────────────┘ │
-│                             │                                 │
-│                             ▼                                 │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │                 Data Association & Fusion               │ │
-│  └──────────────────────────┬──────────────────────────────┘ │
-│                             │                                 │
-│                             ▼                                 │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │                  Multi-Object Tracking                  │ │
-│  └──────────────────────────┬──────────────────────────────┘ │
-│                             │                                 │
-│                             ▼                                 │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │                2D / 3D Operational View                 │ │
-│  └─────────────────────────────────────────────────────────┘ │
+│  ┌──────────────┐                                             │
+│  │ Camera /     │                                             │
+│  │ Sensor Input │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ Preprocessing│                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ YOLO-Based   │                                             │
+│  │ Detection    │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ Observation  │                                             │
+│  │ Generation   │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ Multi-Object │                                             │
+│  │ Tracking     │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ Localization │                                             │
+│  └──────┬───────┘                                             │
+│         │                                                     │
+│         ▼                                                     │
+│  ┌──────────────┐                                             │
+│  │ UAV Target   │                                             │
+│  │ Representation│                                            │
+│  └──────────────┘                                             │
 │                                                               │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-Each layer communicates through explicit interfaces and normalized data structures.
-
-This separation provides several engineering advantages:
-
-* Independent subsystem development
-* Easier hardware integration
-* Replaceable AI models
-* Replaceable tracking algorithms
-* Testable processing stages
-* Clear data ownership
-* Hardware-independent simulation
-* Future distributed deployment
+Each stage has a clearly defined responsibility, allowing individual algorithms to be independently evaluated and improved.
 
 ---
 
 # UAV Detection Pipeline
 
-The complete UAV detection pipeline follows a continuous perception workflow:
+The real-time processing pipeline follows:
 
 ```text
-Camera / Sensor Input
-        │
-        ▼
-Data Acquisition
-        │
-        ▼
+Sensor Input
+     │
+     ▼
+Frame Acquisition
+     │
+     ▼
 Preprocessing
-        │
-        ▼
-AI / Sensor Detection
-        │
-        ▼
-Observation Normalization
-        │
-        ▼
-Data Association
-        │
-        ▼
-Multi-Sensor Fusion
-        │
-        ▼
-Target Tracking
-        │
-        ▼
-Target State
-        │
-        ▼
-2D / 3D Visualization
+     │
+     ▼
+AI Inference
+     │
+     ▼
+UAV Detections
+     │
+     ├── Bounding Box
+     ├── Class
+     ├── Confidence
+     └── Timestamp
+     │
+     ▼
+Multi-Object Tracking
+     │
+     ▼
+Target State Estimation
+     │
+     ▼
+UAV Localization
+     │
+     ▼
+Tracked UAV
 ```
 
-Each stage converts raw sensor information into progressively higher-level information.
+A detection represents an observation at a specific moment.
 
-For example:
+A track represents the system's continuously updated estimate of a UAV over time.
 
-```text
-Raw Video
-    ↓
-Image Frame
-    ↓
-Object Detection
-    ↓
-UAV Observation
-    ↓
-Tracked Target
-    ↓
-Unified UAV Track
-```
-
-This layered approach allows the project to evolve from a standalone AI detector into a complete multi-sensor UAV perception platform.
+This distinction is important for maintaining stable target identities and handling temporary detection loss.
 
 ---
 
 # AI-Based UAV Detection
 
-The computer-vision subsystem is responsible for detecting UAVs from EO/IR or other camera sources.
+The primary computer-vision detector uses a **YOLO-family architecture**.
 
-The project uses a **YOLO-family object detection architecture** as the primary AI detection approach.
+YOLO is well suited to this project because it provides a practical balance between object-detection accuracy and inference speed.
 
-Rather than assuming a single model variant is optimal, different model sizes and configurations can be evaluated against the project's UAV dataset and target hardware.
+Instead of selecting a model purely based on its generation or size, the project evaluates candidate model configurations using the actual UAV dataset and deployment hardware.
 
-The selection process considers the trade-off between:
+Potential model variants include different model sizes optimized for:
 
-* Detection accuracy
-* Precision
-* Recall
-* mAP
-* Inference latency
-* FPS
-* GPU memory consumption
-* Target size
-* Detection distance
-* Environmental conditions
+* Maximum inference speed
+* Balanced accuracy and performance
+* Higher detection accuracy
+* Resource-constrained deployment
 
-The AI pipeline follows:
+The final model is selected based on experimental results.
+
+## Detection Output
+
+Each inference produces structured detection information:
 
 ```text
-Camera Stream
-      │
-      ▼
-Frame Acquisition
-      │
-      ▼
-Image Preprocessing
-      │
-      ▼
-YOLO-Based Detection
-      │
-      ▼
-Bounding Boxes
-      │
-      ├── Class
-      ├── Confidence
-      ├── Position
-      └── Timestamp
-      │
-      ▼
-Multi-Object Tracking
-      │
-      ▼
-UAV Track
+Detection
+├── class
+├── confidence
+├── bounding_box
+│   ├── x
+│   ├── y
+│   ├── width
+│   └── height
+└── timestamp
 ```
 
-The detection model is intentionally isolated from the rest of the system.
-
-This allows different YOLO variants, model versions, training configurations, and inference backends to be benchmarked without changing the surrounding platform.
-
----
-
-# Radar & RF Observation
-
-## Radar
-
-Radar provides complementary information that is difficult to obtain directly from a conventional camera.
-
-Depending on the connected radar system, observations may include:
-
-* Range
-* Bearing
-* Elevation
-* Position
-* Velocity
-* Heading
-* Detection confidence
-* Track information
-
-Radar observations can therefore provide spatial and kinematic information that complements visual detection.
-
----
-
-## RF / SDR
-
-RF sensing provides an additional observation channel for aerial activity.
-
-Depending on the sensing hardware and processing pipeline, RF observations may contain:
-
-* Frequency
-* Signal strength
-* Timestamp
-* Signal characteristics
-* Direction information
-* Classification information
-* Detection confidence
-
-The RF subsystem is treated as an independent sensor source and integrated into the common observation-processing pipeline.
-
----
-
-# Multi-Sensor Data Fusion
-
-The fusion subsystem correlates observations originating from different sensors.
-
-For example:
-
-```text
-                 Radar Observation
-                         │
-                  Position / Velocity
-                         │
-                         ▼
-                    ┌─────────┐
-                    │         │
-Camera Detection ──►│ Fusion  │◄── RF Observation
-                    │ Engine  │
-                    └────┬────┘
-                         │
-                         ▼
-                  Unified UAV Track
-```
-
-The system can use multiple attributes when determining whether observations represent the same physical target, including:
-
-* Spatial proximity
-* Temporal consistency
-* Velocity consistency
-* Heading consistency
-* Sensor confidence
-* Predicted target state
-
-State-estimation techniques such as **Kalman Filters or Extended Kalman Filters (EKF)** can be used to estimate target states from noisy and asynchronous measurements.
-
-The output is a normalized target representation that can be consumed by the tracking and visualization layers.
+This output is passed to the tracking subsystem.
 
 ---
 
 # Multi-Object Tracking
 
-Detection provides an instantaneous observation.
+Object detection provides frame-level observations.
 
-Tracking provides **temporal continuity**.
+Multi-object tracking provides **temporal continuity**.
 
-The tracking subsystem maintains persistent target identities across successive observations.
+The tracking subsystem associates detections across consecutive frames and assigns persistent identifiers to individual UAVs.
 
-A target representation may contain:
+Conceptually:
+
+```text
+Frame N
+  │
+  ├── UAV A
+  ├── UAV B
+  └── UAV C
+       │
+       ▼
+   Association
+       │
+       ▼
+Frame N+1
+  │
+  ├── Track 01
+  ├── Track 02
+  └── Track 03
+```
+
+A tracked target may contain:
 
 ```text
 UAV Track
 ├── track_id
-├── timestamp
+├── class
+├── confidence
+├── bounding_box
 ├── position
-│   ├── latitude
-│   ├── longitude
-│   └── altitude
 ├── velocity
 ├── heading
-├── classification
-├── confidence
 ├── first_seen
 ├── last_seen
-└── sensor_sources
+└── tracking_state
 ```
 
-The tracker continuously performs:
+Tracking algorithms can use information such as:
 
-```text
-Prediction
-    ↓
-Observation Association
-    ↓
-State Update
-    ↓
-Confidence Update
-    ↓
-Track Maintenance
-```
-
-This enables the system to maintain stable UAV tracks even when individual sensor observations are intermittent.
-
----
-
-# 3D Geospatial Visualization
-
-The visualization layer provides a real-time spatial representation of UAV detections and their trajectories.
-
-**CesiumJS** is used as the primary 3D geospatial visualization engine.
-
-The operational view can display:
-
-* UAV positions
-* UAV trajectories
-* Sensor locations
-* Detection observations
-* Target metadata
-* Track history
+* Bounding-box position
+* Object appearance
+* Motion
+* Velocity
+* Temporal consistency
 * Detection confidence
-* Sensor coverage
-* Real-time target updates
 
-A 3D environment provides a spatial context in which sensor observations and UAV tracks can be interpreted together.
-
-The visualization layer is designed to consume normalized target and sensor data rather than being directly coupled to individual sensor implementations.
+The tracking subsystem is designed to handle temporary detection loss and maintain target identity whenever sufficient information is available.
 
 ---
 
-# Technology Stack
+# UAV Localization
 
-| Category                 | Technologies                        |
-| ------------------------ | ----------------------------------- |
-| **Frontend**             | React, TypeScript, Vite             |
-| **3D Geospatial**        | CesiumJS, WebGL, 3D Tiles           |
-| **Backend**              | Go, Echo                            |
-| **AI / Computer Vision** | Python, PyTorch, YOLO-family models |
-| **Systems Programming**  | C, C++                              |
-| **Communication**        | REST, SSE / WebSocket, MQTT, gRPC   |
-| **RF / SDR**             | SDR platforms, RF sensors           |
-| **Radar**                | Radar sensor interfaces             |
-| **Data Processing**      | Python, Go                          |
-| **Storage**              | SQLite / PostgreSQL                 |
-| **Deployment**           | Linux, Docker                       |
-| **Simulation**           | ROS 2, Gazebo, SITL                 |
+Detection provides an image-space position.
 
----
+Localization attempts to transform this information into a meaningful spatial representation.
 
-# Simulation & Testing
+Depending on the available sensor configuration, localization can incorporate:
 
-Simulation is used to validate detection, tracking, and fusion components before integration with physical sensors.
+* Camera calibration
+* Camera orientation
+* Camera position
+* Field of view
+* Target image coordinates
+* Altitude information
+* Radar measurements
+* Sensor geometry
 
-The testing environment can reproduce scenarios including:
-
-* Multiple UAV targets
-* Different flight trajectories
-* Sensor noise
-* Intermittent observations
-* Multiple simultaneous targets
-* Sensor latency
-* Target appearance and disappearance
-* Cross-sensor observations
-
-The development workflow follows:
+The conceptual pipeline is:
 
 ```text
-Simulation
-    ↓
-Algorithm Validation
-    ↓
-Software Integration
-    ↓
-Hardware Integration
-    ↓
-Controlled Testing
+Image Coordinates
+       │
+       ▼
+Camera Geometry
+       │
+       ▼
+Sensor Pose
+       │
+       ▼
+Spatial Estimation
+       │
+       ▼
+UAV Position
 ```
 
-Simulation provides repeatable scenarios for evaluating changes to detection, tracking, and fusion algorithms.
+When additional sensors such as radar become available, their measurements can provide complementary spatial information and improve the overall target-state estimation process.
+
+---
+
+# Multi-Sensor Integration
+
+The initial system is centered around AI-based visual detection.
+
+The architecture is intentionally designed to support additional observation sources.
+
+Future sensor inputs may include:
+
+```text
+             ┌─────────────┐
+             │ EO / IR     │
+             │ Camera      │
+             └──────┬──────┘
+                    │
+                    ▼
+             Visual Detection
+                    │
+                    │
+      ┌─────────────┴─────────────┐
+      │                           │
+      ▼                           ▼
+   Radar                        RF / SDR
+ Observation                  Observation
+      │                           │
+      └─────────────┬─────────────┘
+                    ▼
+             Data Association
+                    │
+                    ▼
+              Sensor Fusion
+                    │
+                    ▼
+              Unified UAV
+                 Track
+```
+
+The multi-sensor architecture allows each sensing modality to contribute its own strengths while maintaining a common target representation.
+
+Potential future fusion techniques include:
+
+* Kalman Filtering
+* Extended Kalman Filtering (EKF)
+* Measurement association
+* Track-to-track correlation
+* Confidence fusion
+* State estimation
+
+---
+
+# Dataset & Model Training
+
+The UAV detector is trained and evaluated using a dedicated UAV dataset.
+
+Dataset preparation focuses on representative conditions including:
+
+* Different UAV types
+* Different viewing angles
+* Different distances
+* Different backgrounds
+* Different lighting conditions
+* Different UAV scales
+* Multiple UAVs in a single frame
+* Partial occlusion
+
+The dataset is divided into independent subsets for:
+
+```text
+Dataset
+├── Training Set
+├── Validation Set
+└── Test Set
+```
+
+The test set remains isolated from model training and hyperparameter optimization to provide an unbiased evaluation of the final model.
 
 ---
 
 # Performance Evaluation
 
-UAV detection performance is evaluated across multiple dimensions.
+The system is evaluated using both **AI accuracy metrics** and **real-time system metrics**.
 
-| Category         | Metrics                            |
-| ---------------- | ---------------------------------- |
-| **Detection**    | Precision, Recall, mAP50, mAP50-95 |
-| **Inference**    | FPS, inference latency             |
-| **End-to-End**   | Sensor-to-display latency          |
-| **Tracking**     | Track continuity, ID consistency   |
-| **Localization** | Position estimation error          |
-| **Fusion**       | Observation association accuracy   |
-| **System**       | Throughput, CPU/GPU utilization    |
-| **Scalability**  | Concurrent sensors and UAV tracks  |
+## Detection Metrics
 
-Model performance will be benchmarked using a dedicated UAV dataset under representative operating conditions.
+| Metric        | Purpose                                                |
+| ------------- | ------------------------------------------------------ |
+| **Precision** | Measures how many predicted UAV detections are correct |
+| **Recall**    | Measures how many actual UAVs are detected             |
+| **mAP@50**    | Detection accuracy using IoU threshold of 0.50         |
+| **mAP@50-95** | Detection performance across multiple IoU thresholds   |
 
-The final AI model will be selected based on the measured balance between **detection quality, inference performance, and deployment constraints**, rather than solely selecting the largest or newest model.
+## Runtime Metrics
+
+| Metric                 | Purpose                                             |
+| ---------------------- | --------------------------------------------------- |
+| **FPS**                | Real-time processing capability                     |
+| **Inference Latency**  | Time required for model inference                   |
+| **End-to-End Latency** | Time from frame acquisition to final tracked output |
+| **GPU Memory**         | Model resource requirements                         |
+| **CPU Utilization**    | Overall processing overhead                         |
+
+## Tracking Metrics
+
+| Metric                   | Purpose                                               |
+| ------------------------ | ----------------------------------------------------- |
+| **Track Continuity**     | Ability to maintain a target across frames            |
+| **Identity Consistency** | Ability to prevent unnecessary track identity changes |
+| **Track Loss Rate**      | Frequency of lost target tracks                       |
+| **Localization Error**   | Difference between estimated and reference position   |
+
+The final model and configuration are selected based on the measured trade-off between **accuracy, latency, resource consumption, and tracking stability**.
+
+---
+
+# Hardware & Software Requirements
+
+Actual requirements depend on the selected model and deployment target.
+
+A development configuration may include:
+
+### Hardware
+
+* x86_64 CPU
+* NVIDIA GPU for accelerated training/inference
+* EO/IR or RGB camera
+* Optional radar sensor
+* Optional SDR / RF sensing hardware
+
+### Software
+
+* Ubuntu Linux
+* Python 3.x
+* PyTorch
+* CUDA
+* OpenCV
+* YOLO-family framework
+* NumPy
+* Scientific computing and visualization libraries
+
+Additional dependencies are documented in the project environment configuration.
+
+---
+
+# Simulation & Testing
+
+Simulation and recorded datasets are used to create repeatable testing scenarios before physical deployment.
+
+Testing scenarios may include:
+
+* Single UAV detection
+* Multiple UAV detection
+* Fast-moving UAVs
+* Small/distant UAVs
+* Partial occlusion
+* Complex backgrounds
+* Low-light conditions
+* Temporary detection loss
+* Multiple simultaneous tracks
+
+The validation workflow follows:
+
+```text
+Dataset / Simulation
+        │
+        ▼
+AI Model Evaluation
+        │
+        ▼
+Tracking Evaluation
+        │
+        ▼
+Localization Evaluation
+        │
+        ▼
+Real-Time Pipeline
+        │
+        ▼
+Controlled Hardware Testing
+```
+
+---
+
+# Project Structure
+
+The project is organized around the detection pipeline rather than a conventional web-application architecture.
+
+A representative structure is:
+
+```text
+Ongoing
+```
+
+The actual repository structure may evolve as the implementation develops.
 
 ---
 
 # Development Roadmap
-
+Plan: v1.0.0, can be change
 ```text
 Phase 1
-UAV Dataset & AI Detection
+Dataset Preparation
         │
         ▼
 Phase 2
-Real-Time YOLO Inference
+YOLO Model Training & Benchmarking
         │
         ▼
 Phase 3
-Multi-Object Tracking
+Real-Time UAV Detection
         │
         ▼
 Phase 4
-3D UAV Visualization
+Multi-Object Tracking
         │
         ▼
 Phase 5
-Radar Integration
+UAV Localization
         │
         ▼
 Phase 6
-RF / SDR Integration
+3D Visualization
         │
         ▼
 Phase 7
-Multi-Sensor Fusion
+Radar Integration
         │
         ▼
 Phase 8
-Distributed Detection Architecture
+RF / SDR Integration
+        │
+        ▼
+Phase 9
+Multi-Sensor Fusion
 ```
 
-The platform is designed to evolve incrementally, beginning with **AI-based UAV detection** and progressively incorporating additional sensing modalities and tracking capabilities.
+The development process prioritizes establishing a reliable visual detection and tracking pipeline before introducing additional sensing modalities.
 
 ---
 
-# Project Vision
+# Research Direction
 
-UAVs Defense is designed as more than a standalone object-detection application.
+The project explores the intersection of:
 
-The project explores how **AI perception, real-time systems, sensor integration, data fusion, tracking algorithms, and 3D geospatial computing** can be combined into a unified UAV detection platform.
+* **Artificial Intelligence**
+* **Computer Vision**
+* **Object Detection**
+* **Multi-Object Tracking**
+* **Geometric Localization**
+* **Sensor Fusion**
+* **Real-Time Computing**
+* **Embedded and Edge Computing**
 
-The core engineering pipeline is:
+The central research question is:
 
-> **Detect → Localize → Identify → Fuse → Track → Visualize**
+> **How can modern AI-based computer vision and complementary sensor observations be combined to achieve accurate, robust, and real-time UAV detection and tracking under varying operational conditions?**
 
-By separating perception, sensor integration, fusion, tracking, and visualization into independent layers, the platform provides a scalable foundation for developing increasingly capable **real-time UAV detection and situational-awareness systems**.
+The project therefore goes beyond training an object-detection model.
 
-The ultimate goal is to build a system in which heterogeneous sensor data can be transformed into a **reliable, continuously updated, and spatially contextualized representation of UAV activity**.
+It investigates the complete path from **raw sensor data to a persistent, spatially meaningful UAV representation**.
+
+---
+
+# Core Pipeline
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│                    UAVs DEFENSE                          │
+│                                                          │
+│   SENSE                                                  │
+│     │                                                    │
+│     ▼                                                    │
+│   DETECT ──────────── YOLO / AI                         │
+│     │                                                    │
+│     ▼                                                    │
+│   IDENTIFY                                               │
+│     │                                                    │
+│     ▼                                                    │
+│   TRACK ───────────── Multi-Object Tracking              │
+│     │                                                    │
+│     ▼                                                    │
+│   LOCALIZE                                               │
+│     │                                                    │
+│     ▼                                                    │
+│   FUSE ────────────── Radar / RF / Other Sensors         │
+│     │                                                    │
+│     ▼                                                    │
+│   VISUALIZE                                              │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+> **UAVs Defense — From AI-powered detection to real-time aerial situational awareness.**
