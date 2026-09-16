@@ -574,37 +574,7 @@ GPU acceleration is recommended for model training and real-time inference but i
 The project is organized around the UAV perception pipeline:
 
 ```text
-UAVs-Defense/
-│
-├── datasets/
-│   ├── train/
-│   ├── val/
-│   └── test/
-│
-├── models/
-│   ├── configs/
-│   ├── checkpoints/
-│   └── exports/
-│
-├── detection/
-│   ├── preprocessing/
-│   ├── inference/
-│   └── postprocessing/
-│
-├── tracking/
-│   ├── association/
-│   ├── prediction/
-│   └── tracking/
-│
-├── localization/
-│   ├── calibration/
-│   └── estimation/
-│
-├── simulation/
-│
-├── evaluation/
-│
-└── README.md
+update later
 ```
 
 The structure can evolve as additional research components are introduced.
