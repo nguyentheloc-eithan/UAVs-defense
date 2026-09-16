@@ -2,13 +2,19 @@
 
 ## AI-Based UAV Detection, Localization & Tracking System
 
-> **UAVs Defense** is an AI-based UAV perception research project focused on the real-time detection, identification, localization, and continuous tracking of Unmanned Aerial Vehicles (UAVs).
+> **UAVs Defense** is a personal AI research project focused on the real-time detection, identification, localization, and continuous tracking of Unmanned Aerial Vehicles (UAVs) using computer vision.
 
-The current implementation is intentionally **software-first**. It focuses on deep-learning-based computer vision and multi-object tracking using publicly available UAV datasets, recorded video, and software-based simulation as the primary sources of sensor data.
+**Project type:** Personal, non-commercial research project
+**License:** AGPL-3.0 (see [License & Third-Party Components](#license--third-party-components))
+**Primary detection engine:** Ultralytics YOLO (YOLO26 / YOLO11)
+**Comparison engines:** RT-DETR / RT-DETRv2, YOLOX
+**Status:** Early development (see [Development Roadmap](#development-roadmap))
 
-The system is designed around a **replaceable AI detection-engine architecture**. The detector is treated as the perception engine of the application: an existing model can be used as-is, fine-tuned on UAV-specific data, optimized for deployment, modified, or replaced by another model without changing the rest of the application.
+The implementation is **software-first**. It relies on public UAV datasets, recorded video, and software simulation as its data sources, so the full perception pipeline can be built and evaluated without dedicated sensing hardware.
 
-The architecture can later incorporate additional sensing modalities such as **EO/IR, radar, and RF/SDR** when physical hardware becomes available.
+The system is built around a **replaceable AI detection engine**. Ultralytics YOLO is the primary engine because of its mature training, tracking, and export tooling, but the rest of the application never depends on YOLO-specific objects. Any detector can be plugged in, benchmarked, or swapped without rewriting tracking, localization, or visualization.
+
+The architecture is designed to later incorporate **EO/IR, radar, and RF/SDR** sensing when physical hardware becomes available.
 
 ---
 
@@ -21,28 +27,28 @@ The architecture can later incorporate additional sensing modalities such as **E
 5. [UAV Detection Pipeline](#uav-detection-pipeline)
 6. [AI Detection Engine](#ai-detection-engine)
 7. [Detection Engine Interface](#detection-engine-interface)
-8. [Model Selection & Benchmarking](#model-selection--benchmarking)
+8. [Small-UAV Detection Strategy](#small-uav-detection-strategy)
 9. [Multi-Object Tracking](#multi-object-tracking)
 10. [UAV Localization](#uav-localization)
-11. [Simulation & Data Sources](#simulation--data-sources)
+11. [Data Sources & Simulation](#data-sources--simulation)
 12. [Dataset & Model Training](#dataset--model-training)
 13. [Performance Evaluation](#performance-evaluation)
 14. [Software Requirements](#software-requirements)
-15. [Project Structure](#project-structure)
-16. [Development Roadmap](#development-roadmap)
-17. [Future Multi-Sensor Integration](#future-multi-sensor-integration)
-18. [Research Direction](#research-direction)
-19. [Core Concept](#core-concept)
+15. [Quick Start](#quick-start)
+16. [Project Structure](#project-structure)
+17. [Development Roadmap](#development-roadmap)
+18. [Future Multi-Sensor Integration](#future-multi-sensor-integration)
+19. [Research Direction](#research-direction)
+20. [Core Concept](#core-concept)
+21. [License & Third-Party Components](#license--third-party-components)
 
 ---
 
 # Overview
 
-Small Unmanned Aerial Vehicles present a challenging computer-vision problem.
+Small UAVs are a hard computer-vision problem. A distant UAV may occupy only a few pixels, and its appearance changes with viewing angle, lighting, background, motion blur, compression, and weather. It is also easily confused with birds, aircraft, and background clutter.
 
-A UAV may occupy only a small number of pixels when observed at long distances, while changes in viewing angle, lighting, background, motion, compression, and environmental conditions can significantly affect its appearance.
-
-A reliable UAV detection system must therefore address several problems simultaneously:
+A reliable UAV perception system must handle:
 
 - Small-object detection
 - Real-time inference
@@ -52,11 +58,7 @@ A reliable UAV detection system must therefore address several problems simultan
 - Motion and trajectory estimation
 - Environmental variation
 - Spatial localization
-- Computational resource constraints
-
-**UAVs Defense focuses on solving these problems through an AI-driven perception pipeline.**
-
-The initial system operates on software-accessible data rather than requiring dedicated physical sensing hardware.
+- Limited compute resources
 
 ```text
                   Public Dataset / Video
@@ -71,8 +73,9 @@ The initial system operates on software-accessible data rather than requiring de
                 ┌───────────────────────┐
                 │   AI Detection Engine │
                 │                       │
-                │ RT-DETR / YOLOX /     │
-                │ YOLO / Custom Model   │
+                │ YOLO (primary)        │
+                │ RT-DETR / YOLOX       │
+                │ Custom Model          │
                 └───────────┬───────────┘
                             │
                             ▼
@@ -82,7 +85,7 @@ The initial system operates on software-accessible data rather than requiring de
                    Multi-Object Tracking
                             │
                             ▼
-                    Target State Estimation
+                  Target State Estimation
                             │
                             ▼
                      UAV Localization
@@ -91,184 +94,136 @@ The initial system operates on software-accessible data rather than requiring de
                       UAV Track Output
 ```
 
-The application is intentionally decoupled from any single model. The detection engine may be upgraded, optimized, or replaced as experimentation progresses.
-
 ---
 
 # Project Objectives
 
-The project focuses on developing a complete UAV perception pipeline capable of:
+The project aims to build a complete UAV perception pipeline that can:
 
-- Detecting UAVs from video and image data
-- Identifying UAV objects using deep-learning models
-- Detecting multiple UAVs simultaneously
-- Estimating detection confidence
-- Maintaining persistent target identities
-- Tracking UAV movement across frames
-- Estimating target position and motion
-- Evaluating detection performance quantitatively
-- Comparing different AI detection engines
-- Optimizing AI inference for real-time operation
-- Supporting repeatable software-based experiments
-- Providing an architecture suitable for future sensor integration
+- Detect UAVs in images, recorded video, and live streams
+- Detect multiple UAVs simultaneously with calibrated confidence scores
+- Distinguish UAVs from common confusers such as birds and aircraft
+- Maintain persistent target identities across frames
+- Estimate target motion and trajectory
+- Estimate target bearing and approximate position
+- Evaluate detection and tracking quantitatively with standard metrics
+- Compare detection engines under a fair, repeatable protocol
+- Run in real time on a desktop GPU and, later, on edge hardware
+- Provide an architecture ready for future multi-sensor fusion
 
-The primary focus is **UAV perception**, rather than UAV mitigation or interception.
+The focus is **UAV perception**: detection, tracking, and localization. UAV mitigation and interception are out of scope.
 
 ---
 
 # Current Scope
 
-The current project is intentionally focused on software-based development.
-
-## Current Development Areas
+## In Scope
 
 - UAV image and video processing
-- Object detection
-- Dataset preparation
-- Model training and fine-tuning
-- Detection-engine benchmarking
-- Multi-object tracking
-- Detection confidence analysis
-- Video-based target tracking
-- Software simulation
-- Runtime performance benchmarking
+- Dataset collection, conversion, and preparation
+- YOLO fine-tuning for UAV detection
+- Small-object detection improvements
+- Detection-engine abstraction and benchmarking
+- Multi-object tracking and track evaluation
+- Image-based bearing and range estimation
+- Model export and runtime optimization
+- Web-based visualization
+- Software simulation for ground-truth experiments
 
-## Current Data Sources
+## Data Sources
 
-The project currently relies on:
-
-- Publicly available UAV datasets
+- Public UAV detection and tracking datasets
 - Public UAV videos
-- Recorded video data
-- Synthetic or simulated data
-- Software-generated sensor observations
+- Personally recorded video
+- Synthetic and simulated data
 
-This allows the detection and tracking algorithms to be developed and evaluated without dedicated physical UAV-detection hardware.
-
-## Future Hardware Integration
-
-The architecture is prepared for future integration with:
+## Future Hardware (not assumed available)
 
 - EO/IR cameras
 - Radar systems
 - SDR / RF sensors
 - Other aerial sensing systems
 
-These components are **future integration targets and are not assumed to be physically available in the current implementation**.
-
 ---
 
 # System Architecture
 
-The application is structured around independent perception stages.
+The application is split into independent stages so each can be tested and improved on its own.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         UAVs DEFENSE                            │
-│                                                                 │
-│                 AI-Based UAV Perception System                  │
+│                  AI-Based UAV Perception System                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   ┌───────────────────┐                                         │
-│   │ Dataset / Video   │                                         │
-│   │ / Simulation      │                                         │
-│   └─────────┬─────────┘                                         │
+│   Dataset / Video / Simulation / Live Stream                    │
 │             │                                                   │
 │             ▼                                                   │
-│   ┌───────────────────┐                                         │
-│   │ Frame Acquisition │                                         │
-│   └─────────┬─────────┘                                         │
+│   Frame Source  ──────────────  (file, RTSP, webcam, sim)       │
 │             │                                                   │
 │             ▼                                                   │
-│   ┌───────────────────┐                                         │
-│   │ Image             │                                         │
-│   │ Preprocessing     │                                         │
-│   └─────────┬─────────┘                                         │
+│   Preprocessing ──────────────  (resize, tiling, normalization) │
 │             │                                                   │
 │             ▼                                                   │
 │   ┌──────────────────────────────────────┐                      │
 │   │          AI Detection Engine         │                      │
-│   │                                      │                      │
-│   │ RT-DETR / RT-DETRv2 / YOLOX / YOLO │                      │
-│   │ Custom / Optimized Deployment Model │                      │
+│   │  YOLO (primary) │ RT-DETR │ YOLOX    │                      │
+│   │  Custom / Exported (ONNX, TensorRT)  │                      │
 │   └──────────────────┬───────────────────┘                      │
+│                      │  Detection[]  (common format)            │
+│                      ▼                                          │
+│   Multi-Object Tracker ───────  (ByteTrack / BoT-SORT)          │
+│                      │  Track[]                                 │
+│                      ▼                                          │
+│   State Estimation ───────────  (Kalman filter)                 │
 │                      │                                          │
 │                      ▼                                          │
-│             ┌─────────────────┐                                 │
-│             │ UAV Detections  │                                 │
-│             └────────┬────────┘                                 │
+│   Localization ───────────────  (bearing, range estimate)       │
 │                      │                                          │
 │                      ▼                                          │
-│             ┌─────────────────┐                                 │
-│             │ Object Tracking │                                 │
-│             └────────┬────────┘                                 │
-│                      │                                          │
-│                      ▼                                          │
-│             ┌─────────────────┐                                 │
-│             │ Target State    │                                 │
-│             │ Estimation      │                                 │
-│             └────────┬────────┘                                 │
-│                      │                                          │
-│                      ▼                                          │
-│             ┌─────────────────┐                                 │
-│             │ UAV Localization│                                 │
-│             └────────┬────────┘                                 │
-│                      │                                          │
-│                      ▼                                          │
-│                UAV Track Output                                │
+│   Output ─────────────────────  (API, WebSocket, video, logs)   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
-The architecture separates **detection, tracking, and localization** so that each stage can be independently evaluated and improved.
 
 ---
 
 # UAV Detection Pipeline
 
-The core processing pipeline is:
-
 ```text
-Input Video / Dataset
+Input (image / video / stream)
         │
         ▼
-Frame Extraction
+Frame Extraction  ── frame_index, timestamp
         │
         ▼
-Image Preprocessing
+Preprocessing
         │
         ▼
-AI Detection Engine
+Detection Engine
         │
         ▼
-UAV Detection
-        │
-        ├── Bounding Box
-        ├── Class
-        ├── Confidence
-        └── Timestamp
-        │
-        ▼
-Multi-Object Tracking
+Detection[]
+        ├── bounding box
+        ├── class
+        ├── confidence
+        └── timestamp
         │
         ▼
-Target State
-        │
-        ├── Position
-        ├── Velocity
-        └── Track Identity
+Tracker
         │
         ▼
-Localization / Visualization
+Track[]
+        ├── track_id
+        ├── position (image + estimated world)
+        ├── velocity
+        └── state (tentative / confirmed / lost)
+        │
+        ▼
+Localization / Visualization / API
 ```
 
-The pipeline should operate on:
-
-- Individual images
-- Recorded video
-- Live video streams
-
-The same detection output contract is used regardless of the underlying model.
+The same detection output contract is used for every model.
 
 ---
 
@@ -276,665 +231,527 @@ The same detection output contract is used regardless of the underlying model.
 
 ## Design Principle
 
-The AI model is treated as a **replaceable detection engine**, not as the application itself.
-
-The project should not be architecturally locked to a single model family.
-
-An existing model can be:
-
-1. Used directly as a baseline
-2. Fine-tuned on a UAV dataset
-3. Optimized for latency and memory
-4. Exported to an inference runtime
-5. Modified at the architecture or training level
-6. Replaced by a different detector
-7. Replaced by a custom model developed specifically for UAV detection
-
-Conceptually:
+The detector is a **replaceable engine**, not the application itself. Any engine can be used as a baseline, fine-tuned, optimized, exported, modified, or replaced.
 
 ```text
                     Detection Engine
                            │
           ┌────────────────┼────────────────┐
-          │                │                │
           ▼                ▼                ▼
-       RT-DETR           YOLOX            YOLO
+   Ultralytics YOLO     RT-DETR           YOLOX
+      (primary)       (comparison)     (comparison)
           │                │                │
           └────────────────┼────────────────┘
-                           │
                            ▼
-                    Common Output
-                           │
+                  Common Detection[]
                            ▼
-                    Tracking Layer
+                     Tracking Layer
 ```
 
-The rest of the application should not depend on model-specific output formats.
+## Primary Engine: Ultralytics YOLO
 
-## Initial Candidate Models
+Ultralytics YOLO is the primary engine for this project because it offers:
 
-The project begins with several model families rather than assuming one model is automatically the best:
+- Simple fine-tuning on custom datasets
+- Multiple model sizes (n, s, m, l, x) to trade accuracy against speed
+- Built-in trackers (ByteTrack, BoT-SORT) for fast prototyping
+- Export to ONNX, TensorRT, OpenVINO, and other runtimes
+- Strong documentation and community support
 
-### RT-DETR / RT-DETRv2
+The project starts with **YOLO26** (the current Ultralytics release) and keeps **YOLO11** as a stable fallback. Newer Ultralytics releases can be added as additional engines and benchmarked under the same protocol.
 
-RT-DETR is the primary open baseline for the initial benchmark because the official implementation is available under Apache-2.0. The official repository includes PyTorch implementations and RT-DETRv2, and documents deployment paths including ONNX Runtime, TensorRT, and OpenVINO.
+Ultralytics YOLO is used under **AGPL-3.0**, which fits this personal, open-source project. See [License & Third-Party Components](#license--third-party-components).
 
-The model is particularly useful as a research baseline because it can be trained on custom data and later optimized without changing the higher-level application architecture.
+## Comparison Engines
 
-### YOLOX
-
-YOLOX is included as another Apache-2.0 detector family and provides a useful real-time comparison against the transformer-based RT-DETR family.
-
-### Ultralytics YOLO
-
-Ultralytics YOLO can be evaluated as a practical benchmark because its ecosystem provides mature training, tracking, export, and deployment workflows.
-
-However, the licensing model is different from Apache-2.0. Ultralytics currently offers AGPL-3.0 and Enterprise licensing, so the project records the model and license used for each experiment rather than assuming that all YOLO usage has the same redistribution terms.
+| Engine              | Why it is included                                           | License                    |
+| ------------------- | ------------------------------------------------------------ | -------------------------- |
+| RT-DETR / RT-DETRv2 | Transformer-based, NMS-free, strong accuracy baseline        | Apache-2.0 (official repo) |
+| YOLOX               | Anchor-free real-time CNN detector, independent codebase     | Apache-2.0                 |
+| Custom model        | UAV-specific architecture changes (e.g., small-object heads) | Project license            |
 
 ## Model Selection Principle
 
-The project does **not** select a detector from popularity alone.
-
-The final detector is selected from measured performance on the project's UAV dataset and deployment target.
+YOLO is the starting point, not a final verdict. The engine used by default is whichever performs best on this project's UAV test set and target hardware, with particular weight on **small-UAV recall** and **end-to-end latency**.
 
 ```text
-Candidate Models
+Candidate Engines
       │
       ▼
-Same Dataset
+Same dataset split + same evaluation protocol
+      │
+      ├── mAP@50, mAP@50-95
+      ├── Precision / Recall
+      ├── Small-UAV recall
+      ├── False positives on birds / aircraft
+      ├── Latency / FPS
+      └── Memory / model size
       │
       ▼
-Same Evaluation Protocol
-      │
-      ├── Accuracy
-      ├── Small-UAV Recall
-      ├── Precision
-      ├── mAP
-      ├── Latency
-      ├── FPS
-      ├── Memory
-      └── Power / Resource Usage
-      │
-      ▼
-Experimental Comparison
-      │
-      ▼
-Selected Baseline
-      │
-      ├── Fine-tune
-      ├── Optimize
-      ├── Modify
-      └── Replace
+Default Engine  →  fine-tune → optimize → replace when justified
 ```
 
 ---
 
 # Detection Engine Interface
 
-The application should expose an internal model-independent interface.
-
-Conceptually:
+The application consumes **common detections**, never model-specific inference objects.
 
 ```python
-class DetectionEngine:
-    def load(self, model_path: str) -> None:
-        ...
+from dataclasses import dataclass
+from typing import Protocol
 
-    def warmup(self) -> None:
-        ...
+import numpy as np
 
-    def detect(self, frame):
-        ...
 
-    def close(self) -> None:
-        ...
+@dataclass(frozen=True)
+class BoundingBox:
+    x: float        # top-left x, pixels
+    y: float        # top-left y, pixels
+    width: float    # pixels
+    height: float   # pixels
+
+
+@dataclass(frozen=True)
+class Detection:
+    class_id: int
+    class_name: str
+    confidence: float
+    bbox: BoundingBox
+    frame_index: int
+    timestamp: float  # seconds since stream start
+
+
+class DetectionEngine(Protocol):
+    name: str
+
+    def load(self, model_path: str) -> None: ...
+
+    def warmup(self) -> None: ...
+
+    def detect(
+        self, frame: np.ndarray, frame_index: int, timestamp: float
+    ) -> list[Detection]: ...
+
+    def close(self) -> None: ...
 ```
 
-The exact implementation may evolve, but the principle remains the same:
-
-> **The application consumes detections, not model-specific inference objects.**
-
-Every detector converts its native output into a common representation.
+Each engine has an adapter that converts native output into `Detection[]`:
 
 ```text
-Model Output
-    │
-    ▼
-Detection Adapter
-    │
-    ▼
-Common Detection[]
+Model Output  →  Engine Adapter  →  list[Detection]
 ```
 
-A common detection can contain:
+Engines are selected by configuration, not by code changes:
 
-```text
-Detection
-├── class_id
-├── class_name
-├── confidence
-├── bounding_box
-│   ├── x
-│   ├── y
-│   ├── width
-│   └── height
-└── timestamp
+```yaml
+# configs/engine.yaml
+engine: yolo # yolo | rtdetr | yolox | custom
+weights: models/checkpoints/yolo26s_uav_v1.pt
+imgsz: 1280
+conf_threshold: 0.25
+device: cuda:0
 ```
 
-This allows the application to change from:
+---
 
-```text
-RT-DETR
-```
+# Small-UAV Detection Strategy
 
-to:
+Small and distant UAVs are the hardest part of this project. The following techniques are evaluated one at a time, and each result is recorded in the benchmark log:
 
-```text
-YOLOX
-```
+| Technique                       | Idea                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| Higher input resolution         | Train and infer at 1280 px instead of 640 px so small targets keep more pixels |
+| Tiled / sliced inference        | Split large frames into overlapping tiles (e.g., SAHI) and merge detections    |
+| High-resolution detection head  | Add a stride-4 (P2) output layer for tiny objects via a custom model YAML      |
+| Small-object-aware augmentation | Tune mosaic/scale augmentation; copy-paste small UAVs onto new backgrounds     |
+| Hard negatives                  | Include birds, aircraft, insects, and clutter labeled as background            |
+| Temporal cues                   | Use the tracker to confirm weak detections that persist across frames          |
+| Threshold tuning                | Choose confidence thresholds from the precision–recall curve, not defaults     |
 
-or:
-
-```text
-custom detector
-```
-
-without rewriting the tracking, API, visualization, or future sensor-fusion layers.
+Performance is always reported **per object size**, not only as a single mAP value.
 
 ---
 
 # Multi-Object Tracking
 
-Object detection provides information about a UAV at a specific frame.
-
-Tracking provides **temporal continuity across frames**.
-
-The tracking subsystem associates detections over time and assigns persistent identities to individual targets.
+Detection answers _what is in this frame_. Tracking answers _which object is which over time_.
 
 ```text
-Frame N
-
- ├── UAV
- ├── UAV
- └── UAV
-      │
-      ▼
- Detection Association
-      │
-      ▼
-Frame N + 1
-
- ├── Track 01
- ├── Track 02
- └── Track 03
+Frame N detections ─┐
+                    ├─► Association (motion + IoU + confidence) ─► Track 01, 02, 03
+Frame N+1 detections┘
 ```
 
-A tracked UAV may contain:
+## Approach
+
+1. **Prototype:** use the Ultralytics built-in trackers (ByteTrack, BoT-SORT) for a quick end-to-end demo.
+2. **Decouple:** move to a detector-independent tracker that consumes `list[Detection]` (for example, a standalone ByteTrack implementation), so tracking works with every engine.
+3. **Improve:** tune the Kalman motion model and association thresholds for small, fast, erratically moving UAVs.
+
+## Track Model
 
 ```text
-UAV Track
-
+Track
 ├── track_id
-├── class
-├── confidence
-├── bounding_box
-├── position
-├── velocity
-├── first_seen
-├── last_seen
-└── tracking_state
+├── class_name
+├── confidence          (smoothed)
+├── bbox                (latest)
+├── center_px           (x, y)
+├── velocity_px         (vx, vy per second)
+├── bearing             (azimuth, elevation, when calibrated)
+├── range_estimate      (optional, with uncertainty)
+├── first_seen / last_seen
+├── hits / misses
+└── state               (tentative | confirmed | lost)
 ```
-
-Tracking enables the system to:
-
-- Maintain target identity
-- Estimate target movement
-- Handle temporary detection loss
-- Reduce unnecessary identity changes
-- Build target trajectories
-- Provide continuous target-state updates
-
-Possible tracking engines can be evaluated independently from the detector.
 
 ---
 
 # UAV Localization
 
-The initial computer-vision system primarily operates in **image coordinates**.
+The detector works in **image coordinates**. Converting to physical quantities requires camera information.
 
-A detected UAV can be represented using:
+## Level 1: Bearing (single calibrated camera)
 
-```text
-Image Space
-
-├── Center X
-├── Center Y
-├── Width
-└── Height
-```
-
-To estimate physical-world coordinates, additional information is required.
-
-Potential localization inputs include:
-
-- Camera intrinsic parameters
-- Camera position
-- Camera orientation
-- Field of view
-- Target altitude
-- Ground reference
-- External sensor measurements
-
-The conceptual transformation is:
+With camera intrinsics (focal lengths `fx, fy`, principal point `cx, cy`) from OpenCV calibration, a pixel `(u, v)` maps to a viewing direction:
 
 ```text
-Image Coordinates
-       │
-       ▼
-Camera Calibration
-       │
-       ▼
-Camera Pose
-       │
-       ▼
-Geometric Estimation
-       │
-       ▼
-World Coordinates
+azimuth   ≈ atan((u - cx) / fx)
+elevation ≈ atan((cy - v) / fy)
 ```
 
-In the current software-based implementation, localization can be evaluated using simulated or known reference information.
+These angles are relative to the camera. Adding the camera's known orientation converts them to world-referenced bearings.
 
-More advanced geographic localization can be introduced when appropriate sensor and calibration data become available.
+## Level 2: Approximate Range
+
+A single camera cannot measure distance directly. Range can be approximated from:
+
+- **Known target size:** `range ≈ fx × real_width / pixel_width` (very sensitive to size assumptions and box accuracy)
+- **Known or assumed altitude** combined with elevation angle
+- **Simulation ground truth** for validating estimates
+
+Every range estimate is reported with its uncertainty.
+
+## Level 3: 3D Position (future)
+
+- Multiple cameras (triangulation)
+- Camera + radar or RF fusion
+
+In the current software-based implementation, localization accuracy is validated in simulation, where true positions are known.
 
 ---
 
-# Simulation & Data Sources
+# Data Sources & Simulation
 
-Because dedicated UAV-detection hardware is not currently available, the project uses software-accessible data sources to reproduce realistic detection scenarios.
+## Public UAV Datasets (candidates)
 
-## Public UAV Datasets
+The following datasets contain UAVs **as targets** (as opposed to imagery taken _from_ drones, such as VisDrone, which is not suitable here):
 
-Used for:
+| Dataset                            | Content                                                        |
+| ---------------------------------- | -------------------------------------------------------------- |
+| Anti-UAV (Anti-UAV300 / 410 / 600) | RGB and thermal IR tracking sequences                          |
+| Drone-vs-Bird Detection Challenge  | Videos with drones and birds as confusers                      |
+| DUT Anti-UAV                       | Detection images and tracking sequences                        |
+| Det-Fly                            | Air-to-air UAV detection images                                |
+| MAV-VID                            | Videos of small multirotor UAVs                                |
+| Halmstad Drone Detection Dataset   | IR and visible video with drones, birds, aircraft, helicopters |
 
-- Model training
-- Validation
-- Benchmarking
-- Error analysis
+Each dataset has its own license and terms of use (many are research-only). Terms are checked and recorded in `datasets/SOURCES.md` before use.
 
-## Public UAV Videos
+## Recorded and Synthetic Data
 
-Used for:
+- Personally recorded videos for real-world testing
+- Synthetic images (UAVs composited onto varied backgrounds)
+- Simulated scenes with exact ground-truth position and velocity
 
-- Real-time inference experiments
-- Multi-object tracking
-- Long-duration tracking
-- Detection robustness testing
+## Simulation
 
-## Synthetic Data
-
-Used to generate controlled scenarios where target:
-
-- Position
-- Velocity
-- Trajectory
-- Appearance
-- Number of objects
-
-can be controlled.
-
-## Software Simulation
-
-Simulation provides a repeatable environment for evaluating the complete perception pipeline before physical hardware integration.
+Gazebo with PX4 SITL (optionally through ROS 2) provides repeatable scenarios with a simulated camera and known UAV trajectories. This is used to validate tracking and localization end to end.
 
 ---
 
 # Dataset & Model Training
 
-The AI detector is trained and evaluated using a dedicated UAV dataset.
+## Preparation Steps
 
-Dataset preparation includes:
+1. Download and document each source dataset
+2. Convert all annotations to a single YOLO-format dataset
+3. Start with **one class** (`uav`), and add sub-classes later if useful
+4. Add **hard-negative** images (birds, aircraft, empty sky)
+5. Split data **by video sequence**, never by individual frame
+6. Freeze the test split and never use it for tuning
+7. Analyze object-size distribution and class balance
 
-- Image collection
-- Annotation
-- Data cleaning
-- Class definition
-- Dataset balancing
-- Train/validation/test splitting
-- Data augmentation
-- Small-object analysis
+> Splitting by frame leaks nearly identical images between train and test and produces unrealistically high scores. Always split by sequence or recording.
 
-A typical dataset structure is:
+## Structure
 
 ```text
-Dataset
-├── train/
-├── val/
-└── test/
+datasets/
+├── raw/                 # original downloads, untouched
+├── processed/
+│   └── uav_v1/
+│       ├── images/{train,val,test}/
+│       ├── labels/{train,val,test}/
+│       └── data.yaml
+├── splits/              # sequence-level split lists
+└── SOURCES.md           # origin, license, and version of each dataset
 ```
 
-The test set remains separate from training and model-selection experiments to provide an unbiased evaluation of the final detector.
-
-## UAV-Specific Data Considerations
-
-Because distant UAVs may occupy very few pixels, the dataset should intentionally include:
+## Dataset Should Cover
 
 - Small and distant UAVs
-- Different image resolutions
-- Different viewing angles
-- Sky-only backgrounds
-- Urban backgrounds
-- Vegetation
-- Clouds
-- Haze
-- Motion blur
-- Compression artifacts
-- Different lighting conditions
-- Partial or occluded UAVs
+- Multiple resolutions and viewing angles
+- Sky, urban, vegetation, cloud, and haze backgrounds
+- Motion blur and compression artifacts
+- Different lighting, including dawn and dusk
+- Partial occlusion
 - Multiple simultaneous UAVs
+- Birds and aircraft as confusers
 
-The project should also report performance by target scale rather than relying only on a single overall mAP value.
+## Training Example
+
+```bash
+yolo detect train \
+  model=yolo26s.pt \
+  data=datasets/processed/uav_v1/data.yaml \
+  imgsz=1280 epochs=100 batch=8 seed=42 \
+  project=models/runs name=yolo26s_uav_v1
+```
 
 ---
 
 # Performance Evaluation
 
-The project evaluates both **AI detection quality** and **real-time performance**.
-
 ## Detection Metrics
 
-| Metric               | Description                                             |
-| -------------------- | ------------------------------------------------------- |
-| **Precision**        | Percentage of predicted UAV detections that are correct |
-| **Recall**           | Percentage of actual UAVs successfully detected         |
-| **mAP@50**           | Detection performance at IoU threshold 0.50             |
-| **mAP@50-95**        | Detection performance across multiple IoU thresholds    |
-| **Small-UAV Recall** | Detection recall for small/distant UAV targets          |
+| Metric                    | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| Precision                 | Share of predicted UAVs that are correct       |
+| Recall                    | Share of real UAVs that were detected          |
+| mAP@50                    | Average precision at IoU 0.50                  |
+| mAP@50-95                 | Average precision across IoU 0.50–0.95         |
+| AP / Recall by size       | Tiny (< 16 px), small (< 32 px), medium, large |
+| False positives per frame | Especially on bird and aircraft sequences      |
 
 ## Runtime Metrics
 
-| Metric                 | Description                                   |
-| ---------------------- | --------------------------------------------- |
-| **FPS**                | Frames processed per second                   |
-| **Inference Latency**  | Time required for AI inference                |
-| **End-to-End Latency** | Time from input frame to final tracked output |
-| **GPU Memory**         | Memory required by the detector               |
-| **CPU Utilization**    | Processing overhead                           |
-| **Model Size**         | Storage footprint of the deployed model       |
+| Metric             | Description                 |
+| ------------------ | --------------------------- |
+| Inference latency  | Model forward pass time     |
+| End-to-end latency | Frame in → track out        |
+| FPS                | Sustained frames per second |
+| GPU / CPU memory   | Resource usage              |
+| Model size         | Deployed file size          |
 
 ## Tracking Metrics
 
-| Metric                   | Description                                         |
-| ------------------------ | --------------------------------------------------- |
-| **Track Continuity**     | Ability to maintain a target over time              |
-| **Identity Consistency** | Stability of target identities                      |
-| **Track Loss Rate**      | Frequency of lost tracks                            |
-| **Position Error**       | Difference between estimated and reference position |
+| Metric              | Description                                                      |
+| ------------------- | ---------------------------------------------------------------- |
+| HOTA                | Balanced detection + association quality                         |
+| MOTA                | Overall tracking accuracy (misses, false positives, ID switches) |
+| IDF1                | Identity consistency over time                                   |
+| ID switches         | Number of identity changes                                       |
+| Track fragmentation | How often a real track is broken                                 |
+
+## Localization Metrics (simulation)
+
+| Metric        | Description                          |
+| ------------- | ------------------------------------ |
+| Bearing error | Angle difference from ground truth   |
+| Range error   | Absolute and relative distance error |
 
 ## Benchmark Protocol
 
-All candidate detectors should be evaluated using the same:
-
-- Dataset split
-- Input resolution policy
-- Hardware
-- Confidence thresholds
-- Evaluation scripts
-- Video sequences
-- Reporting methodology
-
-This makes model comparisons meaningful.
+All engines are compared with the same dataset split, input resolution policy, hardware, thresholds, evaluation scripts, and video sequences. Every experiment records model, weights, code version, dataset version, and license in `models/benchmarks/`.
 
 ---
 
 # Software Requirements
 
-The current project is primarily software-based.
-
 ## Operating System
 
-- Ubuntu Linux
-- Windows + WSL
+- Ubuntu 22.04 / 24.04
+- Windows 11 + WSL2
 
-## AI / Computer Vision
+## Core
 
-- Python 3.x
-- PyTorch
+- Python 3.10+
+- PyTorch (CUDA build when a GPU is available)
+- Ultralytics
 - OpenCV
 - NumPy
-- Model-specific runtime / framework
-- Detection and tracking evaluation tools
+- ONNX / ONNX Runtime
 
-## Optional Simulation
+## Evaluation
 
-- ROS 2
-- Gazebo
-- SITL
-- Synthetic data-generation tools
+- Ultralytics validation / pycocotools (detection)
+- TrackEval (tracking)
 
-## Hardware Acceleration
+## Application
 
-GPU acceleration is recommended for model training and real-time inference but is not strictly required for initial development and experimentation.
+- FastAPI + WebSocket (backend)
+- Web frontend (e.g., React or plain HTML/JS)
 
-Deployment targets may later include:
+## Optional
 
-- Desktop GPU
-- Industrial GPU workstation
-- NVIDIA Jetson-class edge hardware
-- Other accelerators supported by the selected inference runtime
+- TensorRT (NVIDIA deployment)
+- SAHI (sliced inference)
+- ROS 2, Gazebo, PX4 SITL (simulation)
+- Experiment tracking (MLflow, TensorBoard, or similar)
+
+## Hardware
+
+A CUDA GPU is recommended for training. Inference can run on CPU for development. Later deployment targets include desktop GPUs and NVIDIA Jetson-class edge devices.
+
+---
+
+# Quick Start
+
+> Commands below describe the intended workflow and will be finalized as the implementation matures.
+
+```bash
+# 1. Clone and set up the environment
+git clone <repo-url> uavs-defense
+cd uavs-defense
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2. Prepare the dataset
+python scripts/prepare_dataset.py --config configs/dataset.yaml
+
+# 3. Train the YOLO engine
+python scripts/train.py --config configs/train_yolo.yaml
+
+# 4. Run detection + tracking on a video
+python -m inference.video --source data/samples/demo.mp4 --config configs/engine.yaml
+
+# 5. Evaluate
+python scripts/evaluate.py --engine yolo --split test
+```
 
 ---
 
 # Project Structure
-
-The repository is organized around independent perception components:
 
 ```text
 uavs-defense/
 │
 ├── ai/
 │   ├── engines/
-│   │   ├── base.py
-│   │   ├── rtdetr/
-│   │   ├── yolox/
-│   │   ├── yolo/
+│   │   ├── base.py             # DetectionEngine protocol + Detection types
+│   │   ├── registry.py         # engine selection from config
+│   │   ├── yolo/               # Ultralytics YOLO engine (primary)
+│   │   ├── rtdetr/             # comparison engine
+│   │   ├── yolox/              # comparison engine
 │   │   └── custom/
-│   │
-│   ├── adapters/
-│   │   └── detection.py
-│   │
 │   ├── tracking/
+│   │   ├── base.py             # Tracker protocol + Track types
 │   │   ├── bytetrack/
-│   │   └── ...
-│   │
+│   │   └── kalman.py
 │   ├── localization/
-│   │
+│   │   ├── calibration.py
+│   │   └── bearing.py
 │   └── evaluation/
+│       ├── detection.py
+│       ├── tracking.py
+│       └── runtime.py
 │
-├── datasets/
-│   ├── raw/
-│   ├── processed/
-│   └── splits/
-│
+├── configs/                    # engine, dataset, training, tracker configs
+├── datasets/                   # raw, processed, splits, SOURCES.md
 ├── models/
 │   ├── checkpoints/
-│   ├── exports/
-│   └── benchmarks/
-│
+│   ├── exports/                # ONNX, TensorRT
+│   └── benchmarks/             # experiment results
 ├── inference/
-│   ├── video/
-│   └── stream/
-│
+│   ├── sources.py              # file, webcam, RTSP, simulation
+│   ├── video.py
+│   └── stream.py
 ├── backend/
 │   ├── api/
 │   └── websocket/
-│
 ├── frontend/
 │   └── web/
-│
 ├── simulation/
-│
 ├── scripts/
-│
+├── tests/
 ├── docs/
+│   ├── architecture.md
+│   ├── development-plan.md
 │   ├── model-selection.md
-│   ├── benchmark.md
-│   └── architecture.md
-│
+│   └── benchmark.md
+├── LICENSE                     # AGPL-3.0
+├── requirements.txt
 └── README.md
 ```
 
-The exact structure can evolve as implementation moves from experimentation into deployment.
+Large files (datasets, weights, videos) are kept out of Git.
 
 ---
 
 # Development Roadmap
 
-```text
-Phase 1
-Public Dataset Collection
-        │
-        ▼
-Phase 2
-Dataset Preparation & Annotation
-        │
-        ▼
-Phase 3
-Detection Engine Abstraction
-        │
-        ▼
-Phase 4
-Baseline Model Evaluation
-        │
-        ├── RT-DETR / RT-DETRv2
-        ├── YOLOX
-        └── YOLO-family benchmark
-        │
-        ▼
-Phase 5
-UAV-Specific Fine-Tuning
-        │
-        ▼
-Phase 6
-Model Benchmarking
-        │
-        ▼
-Phase 7
-Real-Time UAV Detection
-        │
-        ▼
-Phase 8
-Multi-Object Tracking
-        │
-        ▼
-Phase 9
-UAV Localization
-        │
-        ▼
-Phase 10
-Web / Mobile Visualization
-        │
-        ▼
-Phase 11
-3D Visualization
-        │
-        ▼
-Phase 12
-Simulated Multi-Sensor Fusion
-        │
-        ▼
-Phase 13
-Physical Sensor Integration
-```
+The project follows a **vertical-slice** strategy: build one simple working pipeline end to end first, then improve each stage.
 
-The project follows a software-first strategy:
+> **Build → Measure → Improve → Compare → Optimize → Extend**
 
-> **Develop → Benchmark → Fine-Tune → Optimize → Validate → Integrate Hardware**
+| Phase | Focus                            | Outcome                                                    |
+| ----- | -------------------------------- | ---------------------------------------------------------- |
+| 0     | Project setup                    | Repo, environment, license, configs, tests                 |
+| 1     | Dataset                          | Unified YOLO-format UAV dataset with sequence-level splits |
+| 2     | Engine abstraction + YOLO engine | Detection on video through the common interface            |
+| 3     | Baseline fine-tuning             | First UAV-trained YOLO model with size-based metrics       |
+| 4     | Tracking                         | Persistent track IDs, evaluated with HOTA / IDF1           |
+| 5     | Small-UAV improvements           | Measured gains from resolution, tiling, P2 head, negatives |
+| 6     | Engine comparison                | YOLO vs. RT-DETR vs. YOLOX benchmark report                |
+| 7     | Optimization                     | ONNX / TensorRT export, real-time performance              |
+| 8     | Localization                     | Calibrated bearing and approximate range                   |
+| 9     | Backend + web visualization      | Live tracks in a browser                                   |
+| 10    | Simulation                       | Ground-truth validation of tracking and localization       |
+| 11    | 3D visualization                 | Tracks shown in a 3D scene                                 |
+| 12    | Simulated multi-sensor fusion    | Fusion architecture tested with simulated sensors          |
+| 13    | Physical sensor integration      | Real hardware, when available                              |
 
-The detection engine is expected to evolve throughout this process.
+The detailed plan, with tasks and completion criteria for each phase, is in [`docs/development-plan.md`](docs/development-plan.md).
 
 ---
 
 # Future Multi-Sensor Integration
 
-The current project is centered on computer vision.
-
-The architecture is intentionally designed to support future sensor integration.
-
 ```text
                          UAV
                           │
              ┌────────────┼────────────┐
-             │            │            │
              ▼            ▼            ▼
          EO / IR        Radar       RF / SDR
-          Camera        Sensor        Sensor
-             │            │            │
-             ▼            ▼            ▼
-          Visual        Radar          RF
-        Observation   Observation   Observation
              │            │            │
              └────────────┼────────────┘
                           ▼
                    Data Association
-                          │
                           ▼
                     Sensor Fusion
-                          │
                           ▼
                        UAV Track
 ```
 
-These sensors are part of the **future architecture**, not requirements for the current project.
-
-Potential future research areas include:
-
-- Radar-camera fusion
-- RF-camera correlation
-- Track-to-track association
-- Extended Kalman Filtering
-- Sensor confidence fusion
-- Multi-modal target classification
-- Improved spatial localization
+These sensors are future work. Research areas include radar–camera fusion, RF–camera correlation, track-to-track association, Extended Kalman Filtering, confidence fusion, and multi-modal classification.
 
 ---
 
 # Research Direction
 
-The project explores the intersection of:
+The project sits at the intersection of computer vision, object detection, multi-object tracking, geometric localization, sensor fusion, real-time computing, and edge AI.
 
-- Artificial Intelligence
-- Computer Vision
-- Object Detection
-- Multi-Object Tracking
-- Geometric Localization
-- Sensor Fusion
-- Real-Time Computing
-- Edge AI
+**Central research question:**
 
-The central research question is:
-
-> **How can modern AI-based computer vision be used to achieve accurate, robust, and real-time UAV detection and tracking under varying environmental and operational conditions?**
-
-The project starts from the fundamental perception problem:
+> How can modern AI-based computer vision achieve accurate, robust, real-time UAV detection and tracking under varying environmental and operational conditions?
 
 ```text
-Raw Image / Video
-       ↓
-UAV Detection
-       ↓
-Object Identification
-       ↓
-Multi-Object Tracking
-       ↓
-Position & Motion Estimation
-       ↓
-UAV Track
-       ↓
-Situational Awareness
+Raw Image / Video → UAV Detection → Multi-Object Tracking
+→ Position & Motion Estimation → UAV Track → Situational Awareness
 ```
-
-The longer-term direction is to build a perception layer that can evolve from a single-camera software system into a multi-modal aerial sensing system.
 
 ---
 
@@ -943,56 +760,42 @@ The longer-term direction is to build a perception layer that can evolve from a 
 The detector is an **engine**, not the entire vehicle.
 
 ```text
-┌───────────────────────────────────────────────────────────┐
-│                       UAVs DEFENSE                        │
-│                                                           │
-│  DATA                                                     │
-│   │                                                       │
-│   ▼                                                       │
-│  DETECT ─────────── Replaceable AI Engine                │
-│   │                 ├── RT-DETR / RT-DETRv2              │
-│   │                 ├── YOLOX                            │
-│   │                 ├── YOLO                              │
-│   │                 └── Custom / Optimized Model         │
-│   │                                                       │
-│   ▼                                                       │
-│  IDENTIFY                                                  │
-│   │                                                       │
-│   ▼                                                       │
-│  TRACK ───────────── Multi-Object Tracking                │
-│   │                                                       │
-│   ▼                                                       │
-│  LOCALIZE                                                  │
-│   │                                                       │
-│   ▼                                                       │
-│  ANALYZE                                                    │
-│   │                                                       │
-│   ▼                                                       │
-│  VISUALIZE                                                  │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
+DATA ─► DETECT ─► TRACK ─► LOCALIZE ─► ANALYZE ─► VISUALIZE
+           │
+           └── Replaceable AI Engine
+               ├── Ultralytics YOLO (primary)
+               ├── RT-DETR / RT-DETRv2
+               ├── YOLOX
+               └── Custom / Optimized Model
 ```
 
-The engineering principle is:
-
-> **Choose an engine → establish a baseline → train it for UAVs → benchmark it → optimize it → replace it when a stronger approach is justified.**
-
-This prevents the rest of the application from becoming coupled to a single AI model.
+> **Choose an engine → build a baseline → train it for UAVs → benchmark it → optimize it → replace it when a stronger approach is justified.**
 
 ---
 
-# Model & License References
+# License & Third-Party Components
 
-The project records the exact model, weights, codebase, and license used for every benchmark.
+This is a **personal, non-commercial, open-source research project** released under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
-- **RT-DETR official repository:** https://github.com/lyuwenyu/RT-DETR
-- **YOLOX official repository:** https://github.com/Megvii-BaseDetection/YOLOX
-- **Ultralytics documentation and licensing:** https://docs.ultralytics.com/
+AGPL-3.0 was chosen because the primary detection engine, **Ultralytics YOLO**, is distributed under AGPL-3.0. Models fine-tuned from Ultralytics weights are treated as covered by the same license.
 
-Licensing must be reviewed for the exact model, weights, code, dataset, and intended distribution model before any production or commercial deployment.
+| Component          | License                                             |
+| ------------------ | --------------------------------------------------- |
+| Ultralytics YOLO   | AGPL-3.0 (Enterprise license available)             |
+| RT-DETR (official) | Apache-2.0                                          |
+| YOLOX              | Apache-2.0                                          |
+| Datasets           | Individual terms, recorded in `datasets/SOURCES.md` |
+
+Apache-2.0 components are compatible with inclusion in this AGPL-3.0 project.
+
+**If the project's purpose changes** (for example, closed-source distribution or commercial use), licensing will be re-evaluated before release. Options include an Ultralytics Enterprise license or switching the default engine to an Apache-2.0 detector, which the engine abstraction makes straightforward.
+
+References:
+
+- Ultralytics documentation and licensing: https://docs.ultralytics.com/
+- RT-DETR official repository: https://github.com/lyuwenyu/RT-DETR
+- YOLOX official repository: https://github.com/Megvii-BaseDetection/YOLOX
 
 ---
 
-> **UAVs Defense — From AI-powered visual detection to real-time UAV situational awareness.**
-
-The project starts entirely from software-accessible data and simulation while maintaining an architecture capable of evolving toward real-world multi-sensor UAV detection as additional hardware becomes available.
+> **UAVs Defense — from AI-powered visual detection to real-time UAV situational awareness.**
