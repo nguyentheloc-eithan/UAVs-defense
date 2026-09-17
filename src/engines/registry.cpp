@@ -11,18 +11,18 @@ namespace uavsd {
 namespace {
 
 struct Registry {
+    Registry() {
+        factories["yolo"] = [](const EngineConfig& config) {
+            return std::make_unique<YoloOnnxEngine>(config);
+        };
+    }
+
     std::mutex mutex;
     std::map<std::string, EngineFactory> factories;
 };
 
 Registry& registry() {
-    static Registry instance = [] {
-        Registry r;
-        r.factories["yolo"] = [](const EngineConfig& config) {
-            return std::make_unique<YoloOnnxEngine>(config);
-        };
-        return r;
-    }();
+    static Registry instance;
     return instance;
 }
 
