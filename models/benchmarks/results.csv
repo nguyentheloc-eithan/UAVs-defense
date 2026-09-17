@@ -1,0 +1,1 @@
+run_id,date,engine,model,weights,dataset_version,imgsz,epochs,seed,git_commit,precision,recall,map50,map50_95,recall_tiny,recall_small,fp_per_neg_image,latency_ms,gpu,notes

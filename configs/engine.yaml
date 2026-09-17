@@ -1,0 +1,7 @@
+engine: yolo
+weights: models/exports/yolo26s_uav_v1.onnx
+imgsz: 1280
+conf_threshold: 0.25
+iou_threshold: 0.7
+device: cpu
+output_format: auto

@@ -1,0 +1,9 @@
+model: yolo26s.pt
+data: datasets/processed/uav_v1/data.yaml
+imgsz: 1280
+epochs: 100
+batch: 8
+seed: 42
+device: 0
+project: models/runs
+name: yolo26s_uav_v1

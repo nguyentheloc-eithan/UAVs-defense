@@ -1,0 +1,7 @@
+weights: models/runs/yolo26s_uav_v1/weights/best.pt
+imgsz: 1280
+opset: 17
+half: false
+simplify: true
+output_dir: models/exports
+output_name: yolo26s_uav_v1.onnx
