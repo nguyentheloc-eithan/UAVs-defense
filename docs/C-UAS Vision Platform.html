@@ -1,0 +1,1903 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden='until-found' i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>C-UAS Vision Platform</title>
+    <meta
+      name="claude:viewport-fit-sides"
+      content="cover" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+    <style>
+      /* Layout: single reading column (1040px) with full-width figures; sections separated by a thin rule and a mono label in the left gutter on wide screens. */
+      :root {
+        --bg: #f2f5f3;
+        --surface: #ffffff;
+        --fg: #13201c;
+        --muted: #54645e;
+        --line: #cdd8d3;
+        --accent: #0b6e63;
+        --accent-soft: #dbeeea;
+        --warn: #b2501a;
+        --warn-soft: #f7e5d9;
+        --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+        --font-body:
+          'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #0e1513;
+          --surface: #151f1c;
+          --fg: #e3ece8;
+          --muted: #94a59f;
+          --line: #2a3a35;
+          --accent: #4fd1be;
+          --accent-soft: #123530;
+          --warn: #f0925a;
+          --warn-soft: #3a2418;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --bg: #0e1513;
+        --surface: #151f1c;
+        --fg: #e3ece8;
+        --muted: #94a59f;
+        --line: #2a3a35;
+        --accent: #4fd1be;
+        --accent-soft: #123530;
+        --warn: #f0925a;
+        --warn-soft: #3a2418;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font: 400 16px/1.6 var(--font-body);
+        padding-block: 0 64px;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+      }
+      .wrap {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+      a {
+        color: var(--accent);
+      }
+      code,
+      pre,
+      .mono {
+        font-family: var(--font-mono);
+      }
+      code {
+        font-size: 0.88em;
+        background: var(--accent-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+      header {
+        padding-block: 48px 28px;
+        border-bottom: 1px solid var(--line);
+      }
+      .kicker {
+        font: 500 12px var(--font-mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      h1 {
+        font: 700 clamp(40px, 7vw, 76px)/0.95 var(--font-display);
+        letter-spacing: 0.005em;
+        text-transform: uppercase;
+        margin: 12px 0 16px;
+        text-wrap: balance;
+      }
+      .lede {
+        font-size: 18px;
+        max-width: 62ch;
+        color: var(--muted);
+        margin: 0;
+      }
+      .lede strong {
+        color: var(--fg);
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        margin-top: 22px;
+        font: 500 12px var(--font-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      nav a {
+        text-decoration: none;
+        color: var(--muted);
+      }
+      nav a:hover,
+      nav a:focus-visible {
+        color: var(--accent);
+        outline: none;
+        text-decoration: underline;
+      }
+      section {
+        padding-block: 40px;
+        border-bottom: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: 150px minmax(0, 1fr);
+        gap: 8px 32px;
+      }
+      section > .tag {
+        font: 500 12px var(--font-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding-top: 10px;
+      }
+      section > .body {
+        min-width: 0;
+      }
+      h2 {
+        font: 600 clamp(28px, 4vw, 40px)/1.05 var(--font-display);
+        text-transform: uppercase;
+        margin: 0 0 14px;
+        text-wrap: balance;
+      }
+      h3 {
+        font: 600 15px var(--font-body);
+        margin: 26px 0 6px;
+      }
+      p {
+        margin: 0 0 12px;
+        max-width: 68ch;
+      }
+      ul {
+        margin: 0 0 12px;
+        padding-left: 20px;
+        max-width: 68ch;
+      }
+      li {
+        margin-bottom: 4px;
+      }
+      .verdict {
+        background: var(--accent-soft);
+        border-left: 4px solid var(--accent);
+        padding: 14px 18px;
+        margin: 18px 0;
+        max-width: none;
+      }
+      .verdict p {
+        margin: 0;
+        max-width: 70ch;
+      }
+      .scroll {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 620px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font: 500 11px var(--font-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--bg);
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      .pill {
+        display: inline-block;
+        font: 500 11px var(--font-mono);
+        padding: 1px 7px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        white-space: nowrap;
+      }
+      .pill.w {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      .pill.n {
+        background: var(--bg);
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      figure {
+        margin: 18px 0 0;
+      }
+      figcaption {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 8px;
+        max-width: 80ch;
+      }
+      .fig {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+        padding: 12px;
+      }
+      .fig svg {
+        display: block;
+        min-width: 760px;
+        width: 100%;
+        height: auto;
+        color: var(--fg);
+      }
+      svg text {
+        font-family: var(--font-mono);
+        fill: currentColor;
+      }
+      svg .bx {
+        fill: var(--surface);
+        stroke: currentColor;
+        stroke-width: 1.2;
+      }
+      svg .bx.hi {
+        fill: var(--accent-soft);
+        stroke: var(--accent);
+      }
+      svg .bx.wr {
+        fill: var(--warn-soft);
+        stroke: var(--warn);
+      }
+      svg .bus {
+        fill: var(--bg);
+        stroke: currentColor;
+        stroke-width: 1;
+        stroke-dasharray: 4 3;
+      }
+      svg .t {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      svg .s {
+        font-size: 11px;
+        opacity: 0.72;
+      }
+      svg .h {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        opacity: 0.65;
+      }
+      svg .ln {
+        stroke: currentColor;
+        stroke-width: 1.3;
+        fill: none;
+      }
+      svg .dl {
+        stroke: currentColor;
+        stroke-width: 1.2;
+        fill: none;
+        stroke-dasharray: 4 3;
+      }
+      svg .lb {
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      svg .stereo {
+        font-size: 10px;
+        opacity: 0.65;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 14px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 14px 16px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+      }
+      .card p,
+      .card ul {
+        font-size: 14px;
+        margin: 0;
+      }
+      .card ul {
+        padding-left: 18px;
+      }
+      pre {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 12.5px;
+        line-height: 1.55;
+        margin: 12px 0 0;
+      }
+      .budget {
+        display: flex;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 14px;
+      }
+      .budget div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 500 11px var(--font-mono);
+        border-right: 1px solid var(--bg);
+        background: var(--accent-soft);
+        color: var(--fg);
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .budget div.hot {
+        background: var(--accent);
+        color: var(--bg);
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        font: 12px var(--font-mono);
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .phase {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 4px 18px;
+        padding: 14px 0;
+        border-top: 1px solid var(--line);
+      }
+      .phase:first-of-type {
+        border-top: 0;
+      }
+      .phase .when {
+        font: 600 22px/1 var(--font-display);
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .phase .when small {
+        display: block;
+        font: 400 11px var(--font-mono);
+        color: var(--muted);
+        text-transform: none;
+        margin-top: 4px;
+      }
+      .phase h3 {
+        margin: 0 0 4px;
+      }
+      .phase p {
+        font-size: 14px;
+        margin: 0;
+      }
+      .phase .exit {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      @media (max-width: 760px) {
+        section {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+        }
+        section > .tag {
+          padding-top: 0;
+          margin-bottom: 6px;
+        }
+        .phase {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+
+    <div class="wrap">
+      <header>
+        <div class="kicker">
+          Counter-UAS · Video analytics · Architecture plan
+        </div>
+        <h1>C-UAS Vision Platform</h1>
+        <p class="lede">
+          An object-oriented, enterprise architecture for detecting, tracking
+          and classifying small drones from video, fused with radar and RF.
+          <strong
+            >Use both languages: C++ for the real-time runtime, Python for
+            everything that trains, evaluates and operates around it.</strong
+          >
+        </p>
+        <nav aria-label="Sections">
+          <a href="#language">Language</a
+          ><a href="#architecture">Architecture</a><a href="#oop">OOP design</a
+          ><a href="#latency">Latency</a><a href="#drone">Drone detection</a
+          ><a href="#repo">Repo &amp; stack</a><a href="#roadmap">Roadmap</a
+          ><a href="#risks">Risks</a>
+        </nav>
+      </header>
+
+      <section id="language">
+        <div class="tag">01 · Decision</div>
+        <div class="body">
+          <h2>C++ or Python?</h2>
+          <div class="verdict">
+            <p>
+              <strong>Hybrid, with a hard boundary.</strong> The always-on
+              pipeline (capture, decode, inference, tracking, fusion, alerting)
+              is C++20. Model training, dataset tooling, evaluation, simulation
+              and dashboards are Python. They meet at three artifacts: a
+              TensorRT/ONNX model file, a protobuf schema, and a YAML config.
+              Python never sits in the frame loop.
+            </p>
+          </div>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Concern</th>
+                  <th>C++20</th>
+                  <th>Python 3.11</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frame-loop latency and jitter</td>
+                  <td>
+                    <span class="pill">Fits</span> No GIL, no GC pauses,
+                    predictable tail latency
+                  </td>
+                  <td>
+                    <span class="pill w">Risky</span> GC and GIL cause spikes at
+                    30–60 fps with several streams
+                  </td>
+                </tr>
+                <tr>
+                  <td>GPU path (NVDEC, CUDA, TensorRT)</td>
+                  <td>
+                    <span class="pill">Fits</span> Zero-copy device memory from
+                    decode to inference
+                  </td>
+                  <td>
+                    <span class="pill n">Possible</span> Bindings exist, extra
+                    copies are easy to introduce
+                  </td>
+                </tr>
+                <tr>
+                  <td>24/7 edge uptime, memory control</td>
+                  <td>
+                    <span class="pill">Fits</span> Deterministic ownership
+                    (RAII), small footprint on Jetson
+                  </td>
+                  <td>
+                    <span class="pill w">Risky</span> Leaks and fragmentation
+                    are harder to bound
+                  </td>
+                </tr>
+                <tr>
+                  <td>Camera, radar and DDS SDKs</td>
+                  <td>
+                    <span class="pill">Fits</span> Vendor SDKs ship C/C++ first
+                  </td>
+                  <td>
+                    <span class="pill n">Wrappers</span> Often thin or missing
+                  </td>
+                </tr>
+                <tr>
+                  <td>Model iteration speed</td>
+                  <td>
+                    <span class="pill w">Slow</span> Long builds, heavy tooling
+                  </td>
+                  <td>
+                    <span class="pill">Fits</span> PyTorch, Ultralytics,
+                    notebooks, fast experiments
+                  </td>
+                </tr>
+                <tr>
+                  <td>Data, labeling, evaluation, MLOps</td>
+                  <td><span class="pill w">Poor</span></td>
+                  <td><span class="pill">Fits</span> Richest ecosystem</td>
+                </tr>
+                <tr>
+                  <td>Operator tools, APIs, dashboards</td>
+                  <td><span class="pill n">Possible</span></td>
+                  <td>
+                    <span class="pill">Fits</span> FastAPI, plotting, quick UIs
+                  </td>
+                </tr>
+                <tr>
+                  <td>Hiring and team cost</td>
+                  <td><span class="pill w">Narrower pool</span></td>
+                  <td><span class="pill">Wide pool</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>What lives where</h3>
+          <div class="cols">
+            <div class="card">
+              <h3>C++ — runtime</h3>
+              <ul>
+                <li>Sensor adapters and ingest</li>
+                <li>Decode, preprocess, tiling</li>
+                <li>Detector inference (TensorRT)</li>
+                <li>Tracker, fusion, threat scoring</li>
+                <li>Alert and C2 gateway, recorder</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Python — lifecycle</h3>
+              <ul>
+                <li>Dataset curation and labeling</li>
+                <li>Training, export to ONNX/TensorRT</li>
+                <li>Offline evaluation and replay harness</li>
+                <li>Simulation and synthetic data</li>
+                <li>Ops dashboard and reporting API</li>
+              </ul>
+            </div>
+          </div>
+          <p style="margin-top: 12px; color: var(--muted); font-size: 14px">
+            Prototype shortcut: run phase 1 entirely in Python on recorded video
+            to get a baseline fast. Then port only the frame loop to C++ behind
+            the same interfaces.
+          </p>
+        </div>
+      </section>
+
+      <section id="architecture">
+        <div class="tag">02 · System</div>
+        <div class="body">
+          <h2>Enterprise architecture</h2>
+          <p>
+            Hexagonal (ports and adapters) core. Every external thing, whether a
+            camera, radar, model runtime or C2 system, sits behind an interface,
+            so the core logic runs identically against live sensors, recorded
+            files or simulators.
+          </p>
+          <figure>
+            <div class="fig">
+              <svg
+                viewBox="0 0 990 370"
+                role="img"
+                aria-label="Data flows left to right from sensors through ingest adapters, a C++ detector and tracker, into a fusion engine that also receives radar and RF tracks, then to threat assessment, alerting and evidence recording, all carried on an event bus.">
+                <defs>
+                  <marker
+                    id="a1"
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto">
+                    <path
+                      d="M0 0L10 5L0 10z"
+                      fill="currentColor" />
+                  </marker>
+                </defs>
+                <text
+                  class="h"
+                  x="10"
+                  y="26">
+                  SENSORS
+                </text>
+                <text
+                  class="h"
+                  x="210"
+                  y="26">
+                  INGEST · ADAPTERS
+                </text>
+                <text
+                  class="h"
+                  x="410"
+                  y="26">
+                  PERCEPTION
+                </text>
+                <text
+                  class="h"
+                  x="610"
+                  y="26">
+                  TRACK &amp; FUSE
+                </text>
+                <text
+                  class="h"
+                  x="810"
+                  y="26">
+                  DECIDE &amp; REPORT
+                </text>
+                <!-- row 1 -->
+                <rect
+                  class="bx"
+                  x="10"
+                  y="44"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="22"
+                  y="67">
+                  EO / IR camera
+                </text>
+                <text
+                  class="s"
+                  x="22"
+                  y="86">
+                  visible + thermal
+                </text>
+                <rect
+                  class="bx"
+                  x="210"
+                  y="44"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="222"
+                  y="67">
+                  VideoSource
+                </text>
+                <text
+                  class="s"
+                  x="222"
+                  y="86">
+                  RTSP · GigE · file
+                </text>
+                <rect
+                  class="bx hi"
+                  x="410"
+                  y="44"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="422"
+                  y="67">
+                  Tiler + Detector
+                </text>
+                <text
+                  class="s"
+                  x="422"
+                  y="86">
+                  TensorRT · GPU
+                </text>
+                <rect
+                  class="bx hi"
+                  x="610"
+                  y="44"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="622"
+                  y="67">
+                  Tracker
+                </text>
+                <text
+                  class="s"
+                  x="622"
+                  y="86">
+                  Kalman + association
+                </text>
+                <rect
+                  class="bx wr"
+                  x="810"
+                  y="44"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="822"
+                  y="67">
+                  ThreatAssessor
+                </text>
+                <text
+                  class="s"
+                  x="822"
+                  y="86">
+                  class · range · heading
+                </text>
+                <!-- row 2 -->
+                <rect
+                  class="bx"
+                  x="10"
+                  y="134"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="22"
+                  y="157">
+                  Radar
+                </text>
+                <text
+                  class="s"
+                  x="22"
+                  y="176">
+                  range · az · velocity
+                </text>
+                <rect
+                  class="bx"
+                  x="210"
+                  y="134"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="222"
+                  y="157">
+                  RadarSource
+                </text>
+                <text
+                  class="s"
+                  x="222"
+                  y="176">
+                  ASTERIX · vendor API
+                </text>
+                <rect
+                  class="bx hi"
+                  x="610"
+                  y="134"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="622"
+                  y="157">
+                  FusionEngine
+                </text>
+                <text
+                  class="s"
+                  x="622"
+                  y="176">
+                  global track picture
+                </text>
+                <rect
+                  class="bx"
+                  x="810"
+                  y="134"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="822"
+                  y="157">
+                  AlertGateway
+                </text>
+                <text
+                  class="s"
+                  x="822"
+                  y="176">
+                  C2 · MQTT · operator UI
+                </text>
+                <!-- row 3 -->
+                <rect
+                  class="bx"
+                  x="10"
+                  y="224"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="22"
+                  y="247">
+                  RF detector
+                </text>
+                <text
+                  class="s"
+                  x="22"
+                  y="266">
+                  bearing · protocol ID
+                </text>
+                <rect
+                  class="bx"
+                  x="210"
+                  y="224"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="222"
+                  y="247">
+                  RFSource
+                </text>
+                <text
+                  class="s"
+                  x="222"
+                  y="266">
+                  UDP · serial
+                </text>
+                <rect
+                  class="bx"
+                  x="810"
+                  y="224"
+                  width="170"
+                  height="56"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="822"
+                  y="247">
+                  EvidenceRecorder
+                </text>
+                <text
+                  class="s"
+                  x="822"
+                  y="266">
+                  clips + track log
+                </text>
+                <!-- arrows -->
+                <path
+                  class="ln"
+                  d="M180 72H208"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M380 72H408"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M580 72H608"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M180 162H208"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M180 252H208"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M695 100V132"
+                  marker-end="url(#a1)" />
+                <text
+                  class="lb"
+                  x="704"
+                  y="121">
+                  2D tracks
+                </text>
+                <path
+                  class="ln"
+                  d="M380 156H608"
+                  marker-end="url(#a1)" />
+                <text
+                  class="lb"
+                  x="412"
+                  y="148">
+                  radar tracks (range, az, velocity)
+                </text>
+                <path
+                  class="ln"
+                  d="M380 252H590V172H608"
+                  marker-end="url(#a1)" />
+                <text
+                  class="lb"
+                  x="412"
+                  y="244">
+                  RF bearing + protocol ID
+                </text>
+                <path
+                  class="ln"
+                  d="M780 162H795V72H808"
+                  marker-end="url(#a1)" />
+                <text
+                  class="lb"
+                  x="720"
+                  y="206"
+                  style="opacity: 0">
+                  .
+                </text>
+                <path
+                  class="ln"
+                  d="M895 100V132"
+                  marker-end="url(#a1)" />
+                <path
+                  class="ln"
+                  d="M895 190V222"
+                  marker-end="url(#a1)" />
+                <!-- bus -->
+                <rect
+                  class="bus"
+                  x="10"
+                  y="312"
+                  width="970"
+                  height="40"
+                  rx="4" />
+                <text
+                  class="t"
+                  x="24"
+                  y="336">
+                  Event bus (ZeroMQ / DDS, protobuf) · Config service · Health
+                  &amp; metrics (Prometheus) · Audit log
+                </text>
+              </svg>
+            </div>
+            <figcaption>
+              Every stage publishes to and consumes from the same bus. Radar and
+              RF join at the fusion engine, not at the detector, so video
+              detection stays a pure image problem. Fusion can also cue a PTZ
+              camera to a radar track (a <code>Command</code> sent back through
+              the bus).
+            </figcaption>
+          </figure>
+
+          <h3>Deployment</h3>
+          <div class="cols">
+            <div class="card">
+              <h3>Edge node (per site)</h3>
+              <p>
+                Jetson Orin or x86 + RTX. Runs the full runtime so a site keeps
+                detecting if the network drops. Docker, read-only root, signed
+                images.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Command node</h3>
+              <p>
+                Aggregates tracks from many edge nodes into one air picture.
+                Hosts operator UI, evidence store, config and model registry.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Training environment</h3>
+              <p>
+                Separate, GPU cluster, Python. Produces versioned model
+                artifacts that edge nodes pull and verify by signature.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="oop">
+        <div class="tag">03 · Classes</div>
+        <div class="body">
+          <h2>OOP design</h2>
+          <p>
+            The pipeline depends on four narrow interfaces and nothing concrete.
+            Swapping a detector, adding a radar or changing the alert channel is
+            a new class plus one line in the factory, with no edits to the core.
+          </p>
+          <figure>
+            <div class="fig">
+              <svg
+                viewBox="0 0 980 400"
+                role="img"
+                aria-label="Class diagram: four interfaces (ISensorSource, IDetector, ITracker, IThreatPolicy) each realized by concrete classes. A Pipeline, the Track entity and the IAlertSink interface are wired to them through dependency injection.">
+                <defs>
+                  <marker
+                    id="a2"
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto">
+                    <path
+                      d="M0 0L10 5L0 10z"
+                      fill="currentColor" />
+                  </marker>
+                  <marker
+                    id="tri"
+                    viewBox="0 0 12 12"
+                    refX="11"
+                    refY="6"
+                    markerWidth="9"
+                    markerHeight="9"
+                    orient="auto">
+                    <path
+                      d="M1 1L11 6L1 11z"
+                      fill="var(--surface)"
+                      stroke="currentColor"
+                      stroke-width="1.2" />
+                  </marker>
+                </defs>
+                <!-- interfaces -->
+                <g>
+                  <rect
+                    class="bx hi"
+                    x="20"
+                    y="20"
+                    width="210"
+                    height="84"
+                    rx="4" />
+                  <text
+                    class="stereo"
+                    x="32"
+                    y="37">
+                    «interface»
+                  </text>
+                  <text
+                    class="t"
+                    x="32"
+                    y="55">
+                    ISensorSource
+                  </text>
+                  <text
+                    class="s"
+                    x="32"
+                    y="73">
+                    start() / stop()
+                  </text>
+                  <text
+                    class="s"
+                    x="32"
+                    y="90">
+                    subscribe(handler)
+                  </text>
+                  <rect
+                    class="bx hi"
+                    x="260"
+                    y="20"
+                    width="210"
+                    height="84"
+                    rx="4" />
+                  <text
+                    class="stereo"
+                    x="272"
+                    y="37">
+                    «interface»
+                  </text>
+                  <text
+                    class="t"
+                    x="272"
+                    y="55">
+                    IDetector
+                  </text>
+                  <text
+                    class="s"
+                    x="272"
+                    y="73">
+                    detect(Frame): Detections
+                  </text>
+                  <text
+                    class="s"
+                    x="272"
+                    y="90">
+                    warmup() · info()
+                  </text>
+                  <rect
+                    class="bx hi"
+                    x="500"
+                    y="20"
+                    width="210"
+                    height="84"
+                    rx="4" />
+                  <text
+                    class="stereo"
+                    x="512"
+                    y="37">
+                    «interface»
+                  </text>
+                  <text
+                    class="t"
+                    x="512"
+                    y="55">
+                    ITracker
+                  </text>
+                  <text
+                    class="s"
+                    x="512"
+                    y="73">
+                    update(Detections, t): Tracks
+                  </text>
+                  <text
+                    class="s"
+                    x="512"
+                    y="90">
+                    reset()
+                  </text>
+                  <rect
+                    class="bx hi"
+                    x="740"
+                    y="20"
+                    width="210"
+                    height="84"
+                    rx="4" />
+                  <text
+                    class="stereo"
+                    x="752"
+                    y="37">
+                    «interface»
+                  </text>
+                  <text
+                    class="t"
+                    x="752"
+                    y="55">
+                    IThreatPolicy
+                  </text>
+                  <text
+                    class="s"
+                    x="752"
+                    y="73">
+                    assess(FusedTrack): Threat
+                  </text>
+                  <text
+                    class="s"
+                    x="752"
+                    y="90">
+                    &#160;
+                  </text>
+                </g>
+                <!-- implementations -->
+                <g>
+                  <rect
+                    class="bx"
+                    x="20"
+                    y="150"
+                    width="210"
+                    height="64"
+                    rx="4" />
+                  <text
+                    class="s"
+                    x="32"
+                    y="172"
+                    style="opacity: 1">
+                    VideoSource (RTSP, GigE)
+                  </text>
+                  <text
+                    class="s"
+                    x="32"
+                    y="189"
+                    style="opacity: 1">
+                    RadarSource
+                  </text>
+                  <text
+                    class="s"
+                    x="32"
+                    y="206"
+                    style="opacity: 1">
+                    RFSource
+                  </text>
+                  <rect
+                    class="bx"
+                    x="260"
+                    y="150"
+                    width="210"
+                    height="64"
+                    rx="4" />
+                  <text
+                    class="s"
+                    x="272"
+                    y="172"
+                    style="opacity: 1">
+                    TrtDetector · OnnxDetector
+                  </text>
+                  <text
+                    class="s"
+                    x="272"
+                    y="189"
+                    style="opacity: 1">
+                    MotionDetector
+                  </text>
+                  <text
+                    class="s"
+                    x="272"
+                    y="206"
+                    style="opacity: 1">
+                    TiledDetector «decorator»
+                  </text>
+                  <rect
+                    class="bx"
+                    x="500"
+                    y="150"
+                    width="210"
+                    height="64"
+                    rx="4" />
+                  <text
+                    class="s"
+                    x="512"
+                    y="172"
+                    style="opacity: 1">
+                    ByteTrackTracker
+                  </text>
+                  <text
+                    class="s"
+                    x="512"
+                    y="189"
+                    style="opacity: 1">
+                    KalmanIouTracker
+                  </text>
+                  <rect
+                    class="bx"
+                    x="740"
+                    y="150"
+                    width="210"
+                    height="64"
+                    rx="4" />
+                  <text
+                    class="s"
+                    x="752"
+                    y="172"
+                    style="opacity: 1">
+                    RuleBasedPolicy
+                  </text>
+                  <text
+                    class="s"
+                    x="752"
+                    y="189"
+                    style="opacity: 1">
+                    LearnedPolicy
+                  </text>
+                </g>
+                <path
+                  class="dl"
+                  d="M125 150V106"
+                  marker-end="url(#tri)" />
+                <path
+                  class="dl"
+                  d="M365 150V106"
+                  marker-end="url(#tri)" />
+                <path
+                  class="dl"
+                  d="M605 150V106"
+                  marker-end="url(#tri)" />
+                <path
+                  class="dl"
+                  d="M845 150V106"
+                  marker-end="url(#tri)" />
+                <!-- bus -->
+                <path
+                  class="dl"
+                  d="M125 214V250M365 214V250M605 214V250M845 214V250" />
+                <path
+                  class="ln"
+                  d="M125 250H845" />
+                <path
+                  class="ln"
+                  d="M180 250V285"
+                  marker-end="url(#a2)" />
+                <path
+                  class="ln"
+                  d="M520 250V285"
+                  marker-end="url(#a2)" />
+                <path
+                  class="ln"
+                  d="M830 250V285"
+                  marker-end="url(#a2)" />
+                <text
+                  class="lb"
+                  x="196"
+                  y="271">
+                  wired by Pipeline via dependency injection
+                </text>
+                <!-- row C -->
+                <rect
+                  class="bx"
+                  x="20"
+                  y="285"
+                  width="320"
+                  height="95"
+                  rx="4" />
+                <text
+                  class="stereo"
+                  x="32"
+                  y="302">
+                  «orchestrator»
+                </text>
+                <text
+                  class="t"
+                  x="32"
+                  y="320">
+                  Pipeline
+                </text>
+                <text
+                  class="s"
+                  x="32"
+                  y="338">
+                  addStage(IStage) · run() · stop()
+                </text>
+                <text
+                  class="s"
+                  x="32"
+                  y="355">
+                  owns threads, queues, backpressure
+                </text>
+                <text
+                  class="s"
+                  x="32"
+                  y="372">
+                  holds interfaces only
+                </text>
+                <rect
+                  class="bx wr"
+                  x="370"
+                  y="285"
+                  width="300"
+                  height="95"
+                  rx="4" />
+                <text
+                  class="stereo"
+                  x="382"
+                  y="302">
+                  «entity · State pattern»
+                </text>
+                <text
+                  class="t"
+                  x="382"
+                  y="320">
+                  Track
+                </text>
+                <text
+                  class="s"
+                  x="382"
+                  y="338">
+                  Tentative → Confirmed → Coasting → Lost
+                </text>
+                <text
+                  class="s"
+                  x="382"
+                  y="355">
+                  id · kinematics · class probabilities
+                </text>
+                <text
+                  class="s"
+                  x="382"
+                  y="372">
+                  sources[] (video, radar, rf)
+                </text>
+                <rect
+                  class="bx"
+                  x="700"
+                  y="285"
+                  width="260"
+                  height="95"
+                  rx="4" />
+                <text
+                  class="stereo"
+                  x="712"
+                  y="302">
+                  «interface»
+                </text>
+                <text
+                  class="t"
+                  x="712"
+                  y="320">
+                  IAlertSink
+                </text>
+                <text
+                  class="s"
+                  x="712"
+                  y="338">
+                  emit(Alert)
+                </text>
+                <text
+                  class="s"
+                  x="712"
+                  y="355">
+                  C2Sink (CoT, MQTT) · UiSink
+                </text>
+                <text
+                  class="s"
+                  x="712"
+                  y="372">
+                  RecorderSink
+                </text>
+              </svg>
+            </div>
+            <figcaption>
+              Dashed line with hollow triangle means "implements". The Pipeline
+              is the only class that knows which concrete types are in use, and
+              it learns that from a factory reading config.
+            </figcaption>
+          </figure>
+
+          <h3>Patterns and why each is there</h3>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pattern</th>
+                  <th>Where</th>
+                  <th>What it buys</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Strategy</td>
+                  <td>
+                    <code>IDetector</code>, <code>ITracker</code>,
+                    <code>IThreatPolicy</code>
+                  </td>
+                  <td>
+                    Swap algorithms per site or A/B test models with a config
+                    change
+                  </td>
+                </tr>
+                <tr>
+                  <td>Adapter</td>
+                  <td>Sensor sources</td>
+                  <td>
+                    Vendor protocols stay out of the core; one mock per
+                    interface for tests
+                  </td>
+                </tr>
+                <tr>
+                  <td>Decorator</td>
+                  <td><code>TiledDetector</code> wraps any detector</td>
+                  <td>Small-object tiling added without touching model code</td>
+                </tr>
+                <tr>
+                  <td>Abstract factory + registry</td>
+                  <td><code>ComponentRegistry</code></td>
+                  <td>Plugins register by name; config picks them at start</td>
+                </tr>
+                <tr>
+                  <td>Observer / pub-sub</td>
+                  <td>Event bus</td>
+                  <td>
+                    Recorder, UI and C2 listen to the same tracks independently
+                  </td>
+                </tr>
+                <tr>
+                  <td>State</td>
+                  <td><code>Track</code> lifecycle</td>
+                  <td>
+                    Confirmation and loss rules live in one place, tested in
+                    isolation
+                  </td>
+                </tr>
+                <tr>
+                  <td>Command</td>
+                  <td>PTZ slew-to-cue</td>
+                  <td>Operator and automatic cues share one auditable path</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Interface sketch</h3>
+          <pre>
+// core/include/cuas/detector.hpp
+namespace cuas {
+struct Detection { BBox box; float score; ClassId cls; };   // pixels, sensor frame
+
+class IDetector {
+ public:
+  virtual ~IDetector() = default;
+  virtual void warmup() = 0;
+  virtual std::vector&lt;Detection&gt; detect(const Frame&amp; frame) = 0;
+  virtual ModelInfo info() const = 0;
+};
+
+class TiledDetector final : public IDetector {   // decorator
+ public:
+  TiledDetector(std::unique_ptr&lt;IDetector&gt; inner, TileSpec spec);
+  std::vector&lt;Detection&gt; detect(const Frame&amp; f) override;  // tile, infer, merge, NMS
+};
+}  // namespace cuas</pre
+          >
+        </div>
+      </section>
+
+      <section id="latency">
+        <div class="tag">04 · Budget</div>
+        <div class="body">
+          <h2>Latency budget</h2>
+          <p>
+            Design target for glass-to-track on one stream at 1080p with tiling.
+            These are allocations to design against, to be replaced by measured
+            numbers in phase 2.
+          </p>
+          <div
+            class="budget"
+            role="img"
+            aria-label="Latency budget bar: capture and decode 12 ms, preprocess and tile 6 ms, inference 25 ms, tracking 4 ms, fusion 5 ms, publish 3 ms, total 55 ms.">
+            <div style="flex: 12">12</div>
+            <div style="flex: 6">6</div>
+            <div
+              class="hot"
+              style="flex: 25">
+              25
+            </div>
+            <div style="flex: 4">4</div>
+            <div style="flex: 5">5</div>
+            <div style="flex: 3">3</div>
+          </div>
+          <div class="legend">
+            <span>12 ms capture + NVDEC decode</span
+            ><span>6 ms preprocess + tile</span
+            ><span
+              ><strong style="color: var(--accent)"
+                >25 ms inference</strong
+              ></span
+            ><span>4 ms track</span><span>5 ms fuse</span
+            ><span>3 ms publish</span><span>= 55 ms</span>
+          </div>
+          <ul style="margin-top: 14px">
+            <li>
+              Bounded queues between stages with drop-oldest policy. A slow
+              stage drops stale frames; it never builds a backlog.
+            </li>
+            <li>
+              Inference dominates, so GPU memory is shared end to end (decode,
+              preprocess and inference without a host copy).
+            </li>
+            <li>
+              Timestamp every frame at capture and carry it through to the
+              alert, so latency is measured, not guessed.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="drone">
+        <div class="tag">05 · Domain</div>
+        <div class="body">
+          <h2>What makes drone detection hard</h2>
+          <div class="cols">
+            <div class="card">
+              <h3>Tiny targets</h3>
+              <p>
+                A small quadcopter at range is a few to a few dozen pixels. Use
+                tiled inference over full-resolution frames, a stride-4
+                detection head, long focal length, and train on crops that match
+                the real pixel sizes.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Birds and clutter</h3>
+              <p>
+                Birds, insects, kites and aircraft cause false alarms. Add a
+                second-stage classifier on the track crop, and score motion over
+                time (wingbeat, flight path), not single frames.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Day, night, weather</h3>
+              <p>
+                Pair visible with thermal. Keep one model per modality or a
+                fused-input model, and gate each by image quality metrics.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Moving platform</h3>
+              <p>
+                PTZ and vehicle-mounted cameras move. Estimate ego-motion so the
+                tracker works in world coordinates, and the motion detector
+                subtracts camera movement.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Sensor fusion</h3>
+              <p>
+                Radar gives range and velocity but poor classification; video
+                gives class but no range. Fuse tracks on bearing and time, then
+                confirm hostile class only with video or RF evidence.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Metrics that matter</h3>
+              <ul>
+                <li>Probability of detection by range band</li>
+                <li>False alarms per camera-hour</li>
+                <li>Time from first visible to confirmed track</li>
+                <li>Track continuity (ID switches)</li>
+              </ul>
+            </div>
+          </div>
+          <div
+            class="verdict"
+            style="margin-top: 18px">
+            <p>
+              <strong>Human on the loop.</strong> The platform detects, tracks,
+              classifies and alerts. Any effector or response is a separate
+              system, gated by an operator decision, and every alert carries its
+              evidence clip and the track history that produced it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="repo">
+        <div class="tag">06 · Build</div>
+        <div class="body">
+          <h2>Repository and stack</h2>
+          <pre>
+cuas/
+├── core/            C++20  interfaces, Track, Pipeline, registry (no vendor deps)
+├── sensors/         C++20  VideoSource, RadarSource, RFSource adapters
+├── perception/      C++20  TrtDetector, TiledDetector, preprocess (CUDA)
+├── tracking/        C++20  Kalman, ByteTrack, FusionEngine
+├── decision/        C++20  ThreatAssessor, policies, AlertGateway
+├── apps/            C++20  edge_node, command_node (composition roots)
+├── proto/                  protobuf schemas = the public contract
+├── ml/              Python training, export (ONNX → TensorRT), evaluation
+├── tools/           Python replay, dataset tools, simulator, ops API
+├── deploy/                 Dockerfiles, compose, Helm, signing
+└── tests/                  unit (mock sensors), replay regression, HIL</pre
+          >
+          <div
+            class="scroll"
+            style="margin-top: 16px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Layer</th>
+                  <th>Choice</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Build</td>
+                  <td>CMake + vcpkg or Conan, clang-tidy, sanitizers in CI</td>
+                  <td>Reproducible builds, memory bugs caught early</td>
+                </tr>
+                <tr>
+                  <td>Video and GPU</td>
+                  <td>GStreamer or DeepStream, NVDEC, CUDA, TensorRT</td>
+                  <td>Hardware decode and zero-copy inference</td>
+                </tr>
+                <tr>
+                  <td>Models</td>
+                  <td>YOLO-family or RT-DETR, trained in PyTorch</td>
+                  <td>
+                    Mature export path to TensorRT; compare on your own data
+                  </td>
+                </tr>
+                <tr>
+                  <td>Messaging</td>
+                  <td>ZeroMQ in-node, DDS or MQTT between nodes, protobuf</td>
+                  <td>Typed contracts, language-neutral</td>
+                </tr>
+                <tr>
+                  <td>Interop standards</td>
+                  <td>ASTERIX for radar, Cursor-on-Target for C2</td>
+                  <td>Plugs into existing air-defense tooling</td>
+                </tr>
+                <tr>
+                  <td>Observability</td>
+                  <td>Prometheus, Grafana, structured logs</td>
+                  <td>Per-stage latency and detection quality on one screen</td>
+                </tr>
+                <tr>
+                  <td>Security</td>
+                  <td>
+                    mTLS, signed images and models, role-based access, audit log
+                  </td>
+                  <td>Operational system with sensitive data</td>
+                </tr>
+                <tr>
+                  <td>CI/CD</td>
+                  <td>
+                    Replay regression on a fixed video set gates every merge
+                  </td>
+                  <td>A model or code change cannot silently lower Pd</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="roadmap">
+        <div class="tag">07 · Plan</div>
+        <div class="body">
+          <h2>Roadmap</h2>
+          <p>
+            Durations are indicative for a team of 4–6 and move with data
+            availability.
+          </p>
+          <div class="phase">
+            <div class="when">Phase 0<small>2–3 weeks</small></div>
+            <div>
+              <h3>Requirements and data</h3>
+              <p>
+                Concept of operations, threat list, required detection ranges,
+                false-alarm limits, legal and export review. Collect or acquire
+                drone, bird and background footage from the real sensors.
+              </p>
+              <p class="exit">
+                Exit: signed requirements and a labeled seed dataset.
+              </p>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="when">Phase 1<small>~6 weeks</small></div>
+            <div>
+              <h3>Python baseline</h3>
+              <p>
+                Train a baseline detector and tracker on recorded video. Build
+                the replay and evaluation harness. Define the protobuf
+                contracts.
+              </p>
+              <p class="exit">
+                Exit: Pd and false-alarm numbers per range band, on a frozen
+                test set.
+              </p>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="when">Phase 2<small>8–10 weeks</small></div>
+            <div>
+              <h3>C++ core runtime</h3>
+              <p>
+                Interfaces, pipeline, video adapter, TensorRT detector with
+                tiling, tracker, event bus. Match phase 1 accuracy and meet the
+                latency budget.
+              </p>
+              <p class="exit">
+                Exit: one live stream, end-to-end under budget, replay
+                regression green.
+              </p>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="when">Phase 3<small>6–8 weeks</small></div>
+            <div>
+              <h3>Fusion and C2</h3>
+              <p>
+                Radar and RF adapters, fusion engine, PTZ cueing, threat policy,
+                alert gateway, operator UI, evidence recorder.
+              </p>
+              <p class="exit">
+                Exit: multi-sensor site demo with operator workflow.
+              </p>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="when">Phase 4<small>~6 weeks</small></div>
+            <div>
+              <h3>Hardening and field trials</h3>
+              <p>
+                Hardware-in-the-loop tests, soak tests of 7 days or more,
+                security review, failure injection (lost sensor, GPU reset,
+                network cut), live drone trials in varied weather.
+              </p>
+              <p class="exit">Exit: acceptance against phase 0 requirements.</p>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="when">Phase 5<small>ongoing</small></div>
+            <div>
+              <h3>Operate and improve</h3>
+              <p>
+                Collect hard cases from the field, retrain, ship signed models
+                through the registry, track drift in false-alarm rate.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="risks"
+        style="border-bottom: 0">
+        <div class="tag">08 · Risk</div>
+        <div class="body">
+          <h2>Main risks</h2>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Impact</th>
+                  <th>Mitigation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Too little real drone footage at long range</td>
+                  <td><span class="pill w">High</span></td>
+                  <td>
+                    Early field collection, synthetic data for augmentation
+                    only, test set always from real sensors
+                  </td>
+                </tr>
+                <tr>
+                  <td>False alarms from birds erode operator trust</td>
+                  <td><span class="pill w">High</span></td>
+                  <td>
+                    Second-stage classifier, temporal scoring, per-site
+                    threshold tuning, report false alarms per hour from day one
+                  </td>
+                </tr>
+                <tr>
+                  <td>Model accuracy drops after a change</td>
+                  <td><span class="pill">Medium</span></td>
+                  <td>
+                    Frozen replay set gating CI, model registry with rollback
+                  </td>
+                </tr>
+                <tr>
+                  <td>Vendor lock-in on GPU or camera SDK</td>
+                  <td><span class="pill">Medium</span></td>
+                  <td>
+                    All vendor code behind adapters; ONNX kept as the portable
+                    model format
+                  </td>
+                </tr>
+                <tr>
+                  <td>C++ team ramp-up</td>
+                  <td><span class="pill">Medium</span></td>
+                  <td>
+                    Keep the C++ surface small (the frame loop), enforce
+                    sanitizers and clang-tidy, Python for all other work
+                  </td>
+                </tr>
+                <tr>
+                  <td>Regulatory and export limits</td>
+                  <td><span class="pill">Medium</span></td>
+                  <td>
+                    Review in phase 0, keep model and data handling auditable
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

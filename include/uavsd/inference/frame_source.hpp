@@ -2,10 +2,9 @@
 
 #include <chrono>
 #include <cstdint>
-#include <string>
-
 #include <opencv2/core/mat.hpp>
 #include <opencv2/videoio.hpp>
+#include <string>
 
 namespace uavsd {
 
@@ -32,4 +31,4 @@ private:
     std::chrono::steady_clock::time_point start_;
 };
 
-}
+}  // namespace uavsd

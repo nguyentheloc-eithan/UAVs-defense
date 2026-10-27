@@ -1,8 +1,8 @@
 #include "uavsd/config/engine_config.hpp"
 
-#include <stdexcept>
-
 #include <yaml-cpp/yaml.h>
+
+#include <stdexcept>
 
 namespace uavsd {
 
@@ -21,7 +21,7 @@ YoloOutputFormat parseOutputFormat(const std::string& value) {
     throw std::invalid_argument("unknown output_format: " + value);
 }
 
-}
+}  // namespace
 
 EngineConfig loadEngineConfig(const std::filesystem::path& path) {
     const YAML::Node root = YAML::LoadFile(path.string());
@@ -63,4 +63,4 @@ EngineConfig loadEngineConfig(const std::filesystem::path& path) {
     return config;
 }
 
-}
+}  // namespace uavsd

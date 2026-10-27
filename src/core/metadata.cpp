@@ -43,4 +43,4 @@ std::map<int, std::string> parseClassNames(std::string_view text) {
     return names;
 }
 
-}
+}  // namespace uavsd

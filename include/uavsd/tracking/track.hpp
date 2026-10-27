@@ -32,4 +32,4 @@ struct Track {
     TrackState state = TrackState::Tentative;
 };
 
-}
+}  // namespace uavsd
